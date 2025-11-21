@@ -14,6 +14,9 @@ export class Good {
   @Column({ name: 'base_price' })
   basePrice: number;
 
+  @Column({ type: 'varchar', length: 50 })
+  type: string; // Good type: 'minerals', 'energy', 'food', 'technology', 'luxury', 'industrial', 'organic', 'rare_elements'
+
   @OneToMany(() => PlanetMarket, (market) => market.good)
   marketEntries?: PlanetMarket[];
 

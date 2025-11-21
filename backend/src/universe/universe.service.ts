@@ -1,9 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Hex } from '../entities/hex.entity';
 import { Planet } from '../entities/planet.entity';
+import { PlanetMarket } from '../entities/planet-market.entity';
+import { Good } from '../entities/good.entity';
 import { hexesInRange, HexCoordinate } from '../utils/hex-coordinates';
+import {
+  shouldPlanetSellGood,
+  shouldPlanetBuyGood,
+  calculateMarketPrice,
+} from '../utils/market-logic';
 
 export interface UniverseGenerationConfig {
   hexRadius?: number; // Radius of hexes to generate (default: 10, generates ~331 hexes)
@@ -125,6 +132,10 @@ export class UniverseService {
     private hexRepository: Repository<Hex>,
     @InjectRepository(Planet)
     private planetRepository: Repository<Planet>,
+    @InjectRepository(PlanetMarket)
+    private planetMarketRepository: Repository<PlanetMarket>,
+    @InjectRepository(Good)
+    private goodRepository: Repository<Good>,
   ) {}
 
   /**
@@ -318,6 +329,138 @@ export class UniverseService {
   async clearUniverse(): Promise<void> {
     await this.planetRepository.delete({});
     await this.hexRepository.delete({});
+  }
+
+  /**
+   * Get market prices for a planet at specific coordinates
+   * Returns buying and selling prices for all goods available on the planet
+   */
+  async getPlanetMarketPrices(q: number, r: number): Promise<{
+    planet: {
+      id: number;
+      name: string;
+      hexQ: number;
+      hexR: number;
+    };
+    market: Array<{
+      good: {
+        id: number;
+        name: string;
+        type: string;
+        basePrice: number;
+      };
+      selling?: {
+        price: number;
+        isSelling: boolean;
+      };
+      buying?: {
+        price: number;
+        isSelling: boolean;
+      };
+    }>;
+  }> {
+    const planet = await this.getPlanetAt(q, r);
+    if (!planet) {
+      throw new NotFoundException(`Planet not found at coordinates (${q}, ${r})`);
+    }
+
+    // Get all goods
+    const allGoods = await this.goodRepository.find();
+
+    // Get existing market entries for this planet
+    const existingMarkets = await this.planetMarketRepository.find({
+      where: { planet: { id: planet.id } },
+      relations: ['good'],
+    });
+
+    // Create a map of existing markets by good ID and isSelling flag
+    const marketMap = new Map<string, PlanetMarket>();
+    existingMarkets.forEach((market) => {
+      const key = `${market.good.id}-${market.isSelling}`;
+      marketMap.set(key, market);
+    });
+
+    // Build market prices for all goods
+    const marketPrices = allGoods.map((good) => {
+      const shouldSell = shouldPlanetSellGood(planet, good);
+      const shouldBuy = shouldPlanetBuyGood(planet, good);
+
+      const result: {
+        good: {
+          id: number;
+          name: string;
+          type: string;
+          basePrice: number;
+        };
+        selling?: {
+          price: number;
+          isSelling: boolean;
+        };
+        buying?: {
+          price: number;
+          isSelling: boolean;
+        };
+      } = {
+        good: {
+          id: good.id,
+          name: good.name,
+          type: good.type,
+          basePrice: good.basePrice,
+        },
+      };
+
+      // If planet should sell this good, include selling price
+      if (shouldSell) {
+        const marketKey = `${good.id}-true`;
+        let marketEntry = marketMap.get(marketKey);
+
+        // If market entry doesn't exist or is stale, calculate new price
+        if (!marketEntry) {
+          const price = calculateMarketPrice(planet, good, true);
+          result.selling = {
+            price,
+            isSelling: true,
+          };
+        } else {
+          result.selling = {
+            price: marketEntry.price,
+            isSelling: marketEntry.isSelling,
+          };
+        }
+      }
+
+      // If planet should buy this good, include buying price
+      if (shouldBuy) {
+        const marketKey = `${good.id}-false`;
+        let marketEntry = marketMap.get(marketKey);
+
+        // If market entry doesn't exist or is stale, calculate new price
+        if (!marketEntry) {
+          const price = calculateMarketPrice(planet, good, false);
+          result.buying = {
+            price,
+            isSelling: false,
+          };
+        } else {
+          result.buying = {
+            price: marketEntry.price,
+            isSelling: marketEntry.isSelling,
+          };
+        }
+      }
+
+      return result;
+    });
+
+    return {
+      planet: {
+        id: planet.id,
+        name: planet.name,
+        hexQ: planet.hexQ!,
+        hexR: planet.hexR!,
+      },
+      market: marketPrices,
+    };
   }
 
   private generatePlanetName(rng: SeededRandom, usedNames: Set<string>): string {

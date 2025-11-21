@@ -18,6 +18,7 @@ let PlanetMarket = class PlanetMarket {
     planet;
     good;
     price;
+    isSelling;
     demandModifier;
     updatedAt;
 };
@@ -44,6 +45,14 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], PlanetMarket.prototype, "price", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        name: 'is_selling',
+        type: 'boolean',
+        default: true,
+    }),
+    __metadata("design:type", Boolean)
+], PlanetMarket.prototype, "isSelling", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         name: 'demand_modifier',

@@ -18,6 +18,7 @@ let Good = class Good {
     id;
     name;
     basePrice;
+    type;
     marketEntries;
     inventories;
     eventEffects;
@@ -35,6 +36,10 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'base_price' }),
     __metadata("design:type", Number)
 ], Good.prototype, "basePrice", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50 }),
+    __metadata("design:type", String)
+], Good.prototype, "type", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => planet_market_entity_1.PlanetMarket, (market) => market.good),
     __metadata("design:type", Array)

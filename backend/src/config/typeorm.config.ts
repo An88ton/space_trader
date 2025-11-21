@@ -21,6 +21,8 @@ import { SeedCoreGoods1732329600000 } from '../migrations/1732329600000-SeedCore
 import { AddHexGridSupport1732400000000 } from '../migrations/1732400000000-AddHexGridSupport';
 import { SeedInitialPlanets1732401000000 } from '../migrations/1732401000000-SeedInitialPlanets';
 import { AddShipPositionTracking1732560000000 } from '../migrations/1732560000000-AddShipPositionTracking';
+import { AddGoodType1763723248333 } from '../migrations/1763723248333-AddGoodType';
+import { AddMarketSellingFlag1763723302921 } from '../migrations/1763723302921-AddMarketSellingFlag';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -55,6 +57,8 @@ export const dataSourceOptions: DataSourceOptions = {
     AddHexGridSupport1732400000000,
     SeedInitialPlanets1732401000000,
     AddShipPositionTracking1732560000000,
+    AddGoodType1763723248333,
+    AddMarketSellingFlag1763723302921,
   ],
 };
 

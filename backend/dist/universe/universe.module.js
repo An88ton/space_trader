@@ -13,12 +13,14 @@ const universe_service_1 = require("./universe.service");
 const universe_controller_1 = require("./universe.controller");
 const hex_entity_1 = require("../entities/hex.entity");
 const planet_entity_1 = require("../entities/planet.entity");
+const planet_market_entity_1 = require("../entities/planet-market.entity");
+const good_entity_1 = require("../entities/good.entity");
 let UniverseModule = class UniverseModule {
 };
 exports.UniverseModule = UniverseModule;
 exports.UniverseModule = UniverseModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([hex_entity_1.Hex, planet_entity_1.Planet])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([hex_entity_1.Hex, planet_entity_1.Planet, planet_market_entity_1.PlanetMarket, good_entity_1.Good])],
         controllers: [universe_controller_1.UniverseController],
         providers: [universe_service_1.UniverseService],
         exports: [universe_service_1.UniverseService],

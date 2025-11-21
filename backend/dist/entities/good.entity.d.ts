@@ -5,6 +5,7 @@ export declare class Good {
     id: number;
     name: string;
     basePrice: number;
+    type: string;
     marketEntries?: PlanetMarket[];
     inventories?: PlayerInventory[];
     eventEffects?: EventMarketEffect[];

@@ -18,11 +18,6 @@
 
 .hex-grid-map__hex-group {
   cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.hex-grid-map__hex-group:hover {
-  transform: scale(1.1);
 }
 
 .hex-grid-map__hex {
@@ -30,12 +25,14 @@
   stroke: rgba(255, 255, 255, 0.2);
   stroke-width: 1;
   transition: all 0.2s;
+  transform-origin: center center;
 }
 
-.hex-grid-map__hex:hover {
+.hex-grid-map__hex-group:hover .hex-grid-map__hex {
   fill: rgba(255, 255, 255, 0.1);
   stroke: rgba(255, 255, 255, 0.4);
-  stroke-width: 1.5;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
 }
 
 .hex-grid-map__hex--has-planet {
@@ -43,9 +40,11 @@
   stroke: rgba(100, 150, 255, 0.4);
 }
 
-.hex-grid-map__hex--has-planet:hover {
+.hex-grid-map__hex-group:hover .hex-grid-map__hex--has-planet {
   fill: rgba(100, 150, 255, 0.25);
   stroke: rgba(100, 150, 255, 0.6);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(100, 150, 255, 0.7));
 }
 
 .hex-grid-map__hex--selected {
@@ -234,5 +233,55 @@
 
 .hex-grid-map__error button:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.hex-grid-map__market-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.hex-grid-map__market-modal-content {
+  position: relative;
+  background: rgba(20, 20, 30, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.hex-grid-map__market-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.hex-grid-map__market-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 

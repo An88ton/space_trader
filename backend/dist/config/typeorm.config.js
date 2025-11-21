@@ -24,6 +24,8 @@ const _1732329600000_SeedCoreGoods_1 = require("../migrations/1732329600000-Seed
 const _1732400000000_AddHexGridSupport_1 = require("../migrations/1732400000000-AddHexGridSupport");
 const _1732401000000_SeedInitialPlanets_1 = require("../migrations/1732401000000-SeedInitialPlanets");
 const _1732560000000_AddShipPositionTracking_1 = require("../migrations/1732560000000-AddShipPositionTracking");
+const _1763723248333_AddGoodType_1 = require("../migrations/1763723248333-AddGoodType");
+const _1763723302921_AddMarketSellingFlag_1 = require("../migrations/1763723302921-AddMarketSellingFlag");
 exports.dataSourceOptions = {
     type: 'postgres',
     host: process.env.DB_HOST ?? 'localhost',
@@ -57,6 +59,8 @@ exports.dataSourceOptions = {
         _1732400000000_AddHexGridSupport_1.AddHexGridSupport1732400000000,
         _1732401000000_SeedInitialPlanets_1.SeedInitialPlanets1732401000000,
         _1732560000000_AddShipPositionTracking_1.AddShipPositionTracking1732560000000,
+        _1763723248333_AddGoodType_1.AddGoodType1763723248333,
+        _1763723302921_AddMarketSellingFlag_1.AddMarketSellingFlag1763723302921,
     ],
 };
 const dataSource = new typeorm_1.DataSource(exports.dataSourceOptions);

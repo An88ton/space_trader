@@ -1,0 +1,11 @@
+import { Planet } from '../entities/planet.entity';
+import { Good } from '../entities/good.entity';
+import { PlanetMarket } from '../entities/planet-market.entity';
+export declare const GOOD_TYPES: readonly ["minerals", "energy", "food", "technology", "luxury", "industrial", "organic", "rare_elements"];
+export type GoodType = (typeof GOOD_TYPES)[number];
+export declare function shouldPlanetSellGood(planet: Planet, good: Good): boolean;
+export declare function shouldPlanetBuyGood(planet: Planet, good: Good): boolean;
+export declare function getGoodsPlanetSells(planet: Planet, allGoods: Good[]): Good[];
+export declare function getGoodsPlanetBuys(planet: Planet, allGoods: Good[]): Good[];
+export declare function calculateMarketPrice(planet: Planet, good: Good, isSelling: boolean): number;
+export declare function createMarketEntry(planet: Planet, good: Good, isSelling: boolean): PlanetMarket;

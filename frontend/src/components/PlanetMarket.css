@@ -1,0 +1,131 @@
+.planet-market {
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  color: #fff;
+  max-width: 800px;
+  max-height: 70vh;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+.planet-market__title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #4CAF50;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.planet-market__section {
+  margin-bottom: 24px;
+}
+
+.planet-market__section:last-child {
+  margin-bottom: 0;
+}
+
+.planet-market__section-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #81C784;
+  font-weight: 600;
+}
+
+.planet-market__table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.planet-market__table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.planet-market__table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.planet-market__table-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-left-color: #4CAF50;
+}
+
+.planet-market__col-name {
+  font-weight: 500;
+  color: #fff;
+}
+
+.planet-market__col-type {
+  color: #bbb;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.planet-market__col-price {
+  font-weight: 600;
+  text-align: right;
+}
+
+.planet-market__col-price--sell {
+  color: #81C784;
+}
+
+.planet-market__col-price--buy {
+  color: #FFB74D;
+}
+
+.planet-market__col-base {
+  color: #888;
+  font-size: 12px;
+  text-align: right;
+}
+
+.planet-market__loading,
+.planet-market__error,
+.planet-market__empty {
+  padding: 20px;
+  text-align: center;
+  color: #aaa;
+}
+
+.planet-market__error {
+  color: #f44336;
+}
+
+/* Scrollbar styling */
+.planet-market::-webkit-scrollbar {
+  width: 8px;
+}
+
+.planet-market::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.planet-market::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.planet-market::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+

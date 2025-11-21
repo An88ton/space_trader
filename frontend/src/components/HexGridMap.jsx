@@ -7,6 +7,7 @@ import {
   getPath,
 } from '../api/universe';
 import { travelToPlanet } from '../api/travel';
+import PlanetMarket from './PlanetMarket';
 import './HexGridMap.css';
 
 const HEX_SIZE = 25;
@@ -25,6 +26,7 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
   const [pathStart, setPathStart] = useState(null);
   const [isTraveling, setIsTraveling] = useState(false);
   const [travelError, setTravelError] = useState(null);
+  const [showMarket, setShowMarket] = useState(false);
 
   // Pan and zoom state
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -401,10 +403,26 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
                   <small>Resources: {selectedPlanet.resources.join(', ')}</small>
                 </>
               )}
+              <br />
+              <br />
+              <button
+                onClick={() => setShowMarket(!showMarket)}
+                style={{
+                  padding: '8px 16px',
+                  background: showMarket ? '#666' : '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  width: '100%',
+                  marginBottom: '8px',
+                }}
+              >
+                {showMarket ? 'Hide Market' : 'View Market Prices'}
+              </button>
               {playerPosition?.planetId !== selectedPlanet.id && sessionToken && (
                 <>
-                  <br />
-                  <br />
                   <button
                     onClick={handleTravel}
                     disabled={isTraveling}
@@ -442,11 +460,31 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
               setPath(null);
               setPathStart(null);
               setTravelError(null);
+              setShowMarket(false);
             }}
             className="hex-grid-map__close-button"
           >
             ×
           </button>
+        </div>
+      )}
+
+      {/* Market Prices Modal */}
+      {showMarket && selectedPlanet && (
+        <div className="hex-grid-map__market-modal">
+          <div className="hex-grid-map__market-modal-content">
+            <button
+              onClick={() => setShowMarket(false)}
+              className="hex-grid-map__market-modal-close"
+            >
+              ×
+            </button>
+            <PlanetMarket
+              planetQ={selectedPlanet.hexQ}
+              planetR={selectedPlanet.hexR}
+              planetName={selectedPlanet.name}
+            />
+          </div>
         </div>
       )}
 

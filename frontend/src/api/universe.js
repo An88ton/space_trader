@@ -65,6 +65,10 @@ export async function getPlanet(q, r) {
   return fetchApi(`/universe/planet/${q}/${r}`);
 }
 
+export async function getPlanetMarket(q, r) {
+  return fetchApi(`/universe/planet/${q}/${r}/market`);
+}
+
 export async function getDistance(fromQ, fromR, toQ, toR) {
   return fetchApi(`/universe/distance?fromQ=${fromQ}&fromR=${fromR}&toQ=${toQ}&toR=${toR}`);
 }

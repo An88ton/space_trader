@@ -120,6 +120,9 @@ let UniverseController = class UniverseController {
             eventWeights: planet.eventWeights,
         };
     }
+    async getPlanetMarket(q, r) {
+        return this.universeService.getPlanetMarketPrices(parseInt(q, 10), parseInt(r, 10));
+    }
     async getBounds() {
         return this.universeService.getUniverseBounds();
     }
@@ -197,6 +200,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UniverseController.prototype, "getPlanet", null);
+__decorate([
+    (0, common_1.Get)('planet/:q/:r/market'),
+    __param(0, (0, common_1.Param)('q')),
+    __param(1, (0, common_1.Param)('r')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], UniverseController.prototype, "getPlanetMarket", null);
 __decorate([
     (0, common_1.Get)('bounds'),
     __metadata("design:type", Function),

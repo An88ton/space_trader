@@ -5,6 +5,7 @@ export declare class PlanetMarket {
     planet: Planet;
     good: Good;
     price: number;
+    isSelling: boolean;
     demandModifier: number;
     updatedAt: Date;
 }

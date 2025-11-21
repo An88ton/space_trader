@@ -129,6 +129,11 @@ export class UniverseController {
     };
   }
 
+  @Get('planet/:q/:r/market')
+  async getPlanetMarket(@Param('q') q: string, @Param('r') r: string) {
+    return this.universeService.getPlanetMarketPrices(parseInt(q, 10), parseInt(r, 10));
+  }
+
   @Get('bounds')
   async getBounds() {
     return this.universeService.getUniverseBounds();

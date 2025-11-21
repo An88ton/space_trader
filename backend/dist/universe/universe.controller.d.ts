@@ -75,6 +75,30 @@ export declare class UniverseController {
         marketModifiers: Record<string, number> | null;
         eventWeights: Record<string, number> | null;
     } | null>;
+    getPlanetMarket(q: string, r: string): Promise<{
+        planet: {
+            id: number;
+            name: string;
+            hexQ: number;
+            hexR: number;
+        };
+        market: Array<{
+            good: {
+                id: number;
+                name: string;
+                type: string;
+                basePrice: number;
+            };
+            selling?: {
+                price: number;
+                isSelling: boolean;
+            };
+            buying?: {
+                price: number;
+                isSelling: boolean;
+            };
+        }>;
+    }>;
     getBounds(): Promise<{
         minQ: number;
         maxQ: number;

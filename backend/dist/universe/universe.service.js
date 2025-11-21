@@ -18,7 +18,10 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const hex_entity_1 = require("../entities/hex.entity");
 const planet_entity_1 = require("../entities/planet.entity");
+const planet_market_entity_1 = require("../entities/planet-market.entity");
+const good_entity_1 = require("../entities/good.entity");
 const hex_coordinates_1 = require("../utils/hex-coordinates");
+const market_logic_1 = require("../utils/market-logic");
 const PLANET_TYPES = [
     'terrestrial',
     'gas_giant',
@@ -115,9 +118,13 @@ class SeededRandom {
 let UniverseService = class UniverseService {
     hexRepository;
     planetRepository;
-    constructor(hexRepository, planetRepository) {
+    planetMarketRepository;
+    goodRepository;
+    constructor(hexRepository, planetRepository, planetMarketRepository, goodRepository) {
         this.hexRepository = hexRepository;
         this.planetRepository = planetRepository;
+        this.planetMarketRepository = planetMarketRepository;
+        this.goodRepository = goodRepository;
     }
     async generateUniverse(config = {}) {
         const hexRadius = config.hexRadius ?? 10;
@@ -241,6 +248,78 @@ let UniverseService = class UniverseService {
         await this.planetRepository.delete({});
         await this.hexRepository.delete({});
     }
+    async getPlanetMarketPrices(q, r) {
+        const planet = await this.getPlanetAt(q, r);
+        if (!planet) {
+            throw new common_1.NotFoundException(`Planet not found at coordinates (${q}, ${r})`);
+        }
+        const allGoods = await this.goodRepository.find();
+        const existingMarkets = await this.planetMarketRepository.find({
+            where: { planet: { id: planet.id } },
+            relations: ['good'],
+        });
+        const marketMap = new Map();
+        existingMarkets.forEach((market) => {
+            const key = `${market.good.id}-${market.isSelling}`;
+            marketMap.set(key, market);
+        });
+        const marketPrices = allGoods.map((good) => {
+            const shouldSell = (0, market_logic_1.shouldPlanetSellGood)(planet, good);
+            const shouldBuy = (0, market_logic_1.shouldPlanetBuyGood)(planet, good);
+            const result = {
+                good: {
+                    id: good.id,
+                    name: good.name,
+                    type: good.type,
+                    basePrice: good.basePrice,
+                },
+            };
+            if (shouldSell) {
+                const marketKey = `${good.id}-true`;
+                let marketEntry = marketMap.get(marketKey);
+                if (!marketEntry) {
+                    const price = (0, market_logic_1.calculateMarketPrice)(planet, good, true);
+                    result.selling = {
+                        price,
+                        isSelling: true,
+                    };
+                }
+                else {
+                    result.selling = {
+                        price: marketEntry.price,
+                        isSelling: marketEntry.isSelling,
+                    };
+                }
+            }
+            if (shouldBuy) {
+                const marketKey = `${good.id}-false`;
+                let marketEntry = marketMap.get(marketKey);
+                if (!marketEntry) {
+                    const price = (0, market_logic_1.calculateMarketPrice)(planet, good, false);
+                    result.buying = {
+                        price,
+                        isSelling: false,
+                    };
+                }
+                else {
+                    result.buying = {
+                        price: marketEntry.price,
+                        isSelling: marketEntry.isSelling,
+                    };
+                }
+            }
+            return result;
+        });
+        return {
+            planet: {
+                id: planet.id,
+                name: planet.name,
+                hexQ: planet.hexQ,
+                hexR: planet.hexR,
+            },
+            market: marketPrices,
+        };
+    }
     generatePlanetName(rng, usedNames) {
         let name;
         let attempts = 0;
@@ -263,7 +342,11 @@ exports.UniverseService = UniverseService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(hex_entity_1.Hex)),
     __param(1, (0, typeorm_1.InjectRepository)(planet_entity_1.Planet)),
+    __param(2, (0, typeorm_1.InjectRepository)(planet_market_entity_1.PlanetMarket)),
+    __param(3, (0, typeorm_1.InjectRepository)(good_entity_1.Good)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], UniverseService);
 //# sourceMappingURL=universe.service.js.map

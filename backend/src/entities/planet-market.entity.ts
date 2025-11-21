@@ -32,6 +32,13 @@ export class PlanetMarket {
   price: number;
 
   @Column({
+    name: 'is_selling',
+    type: 'boolean',
+    default: true,
+  })
+  isSelling: boolean; // true = planet sells this good (has resource), false = planet buys this good (needs resource)
+
+  @Column({
     name: 'demand_modifier',
     type: 'double precision',
     default: 1.0,
