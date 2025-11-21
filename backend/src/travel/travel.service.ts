@@ -16,7 +16,7 @@ import { Event } from '../entities/event.entity';
 import { TravelRequestDto } from './dto/travel-request.dto';
 import { TravelResponseDto, TravelLogDto, TravelEventResultDto, TravelEventDto } from './dto/travel-response.dto';
 import { hexDistance, HexCoordinate } from '../utils/hex-coordinates';
-import { getDockingFeeMultiplier } from '../utils/rank-utils';
+import { getDockingFeeMultiplier, calculateRank } from '../utils/rank-utils';
 import { JwtService } from '@nestjs/jwt';
 import {
   CargoItemDto,
@@ -134,10 +134,12 @@ export class TravelService {
     }
 
     // Calculate docking fee with rank-based discount
+    // Calculate rank dynamically from current reputation to ensure it's up-to-date
+    const currentRank = calculateRank(user.reputation);
     const baseDockingFee = destinationPlanet.dockingFee;
-    const discountMultiplier = getDockingFeeMultiplier(user.rank);
+    const discountMultiplier = getDockingFeeMultiplier(currentRank);
     const dockingFee = Math.floor(baseDockingFee * discountMultiplier);
-    
+
     if (user.credits < dockingFee) {
       throw new BadRequestException(
         `Insufficient credits for docking fee. Need ${dockingFee}, have ${user.credits}`,
@@ -147,6 +149,10 @@ export class TravelService {
     // Perform travel in transaction
     return await this.userRepository.manager.transaction(
       async (manager) => {
+        // Update user rank if it's out of sync with reputation
+        if (user.rank !== currentRank) {
+          user.rank = currentRank;
+        }
         // Deduct docking fee from user credits
         user.credits -= dockingFee;
         await manager.getRepository(User).save(user);

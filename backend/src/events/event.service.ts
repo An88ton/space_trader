@@ -556,7 +556,7 @@ export class EventService {
 
     if (planetId !== null) {
       queryBuilder.andWhere(
-        '(activeEvent.planet IS NULL OR activeEvent.planet.id = :planetId)',
+        '(planet IS NULL OR planet.id = :planetId)',
         { planetId },
       );
     }
@@ -647,7 +647,7 @@ export class EventService {
       .where('activeEvent.isActive = :isActive', { isActive: true })
       .andWhere('activeEvent.expiresAtTurn >= :turn', { turn: currentTurn })
       .andWhere(
-        '(activeEvent.planet IS NULL OR activeEvent.planet.id = :planetId)',
+        '(planet IS NULL OR planet.id = :planetId)',
         { planetId },
       )
       .getMany();

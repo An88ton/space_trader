@@ -98,13 +98,17 @@ let TravelService = class TravelService {
         if (ship.fuelCurrent < fuelRequired) {
             throw new common_1.BadRequestException(`Insufficient fuel. Need ${fuelRequired}, have ${ship.fuelCurrent}`);
         }
+        const currentRank = (0, rank_utils_1.calculateRank)(user.reputation);
         const baseDockingFee = destinationPlanet.dockingFee;
-        const discountMultiplier = (0, rank_utils_1.getDockingFeeMultiplier)(user.rank);
+        const discountMultiplier = (0, rank_utils_1.getDockingFeeMultiplier)(currentRank);
         const dockingFee = Math.floor(baseDockingFee * discountMultiplier);
         if (user.credits < dockingFee) {
             throw new common_1.BadRequestException(`Insufficient credits for docking fee. Need ${dockingFee}, have ${user.credits}`);
         }
         return await this.userRepository.manager.transaction(async (manager) => {
+            if (user.rank !== currentRank) {
+                user.rank = currentRank;
+            }
             user.credits -= dockingFee;
             await manager.getRepository(user_entity_1.User).save(user);
             const travelTurn = 0;

@@ -407,7 +407,7 @@ let EventService = class EventService {
             .where('activeEvent.isActive = :isActive', { isActive: true })
             .andWhere('activeEvent.expiresAtTurn >= :turn', { turn: currentTurn });
         if (planetId !== null) {
-            queryBuilder.andWhere('(activeEvent.planet IS NULL OR activeEvent.planet.id = :planetId)', { planetId });
+            queryBuilder.andWhere('(planet IS NULL OR planet.id = :planetId)', { planetId });
         }
         return queryBuilder.getMany();
     }
@@ -460,7 +460,7 @@ let EventService = class EventService {
             .leftJoinAndSelect('activeEvent.planet', 'planet')
             .where('activeEvent.isActive = :isActive', { isActive: true })
             .andWhere('activeEvent.expiresAtTurn >= :turn', { turn: currentTurn })
-            .andWhere('(activeEvent.planet IS NULL OR activeEvent.planet.id = :planetId)', { planetId })
+            .andWhere('(planet IS NULL OR planet.id = :planetId)', { planetId })
             .getMany();
         let modifier = 1.0;
         for (const activeEvent of activeEvents) {
