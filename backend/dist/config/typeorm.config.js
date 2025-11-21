@@ -26,6 +26,7 @@ const _1732401000000_SeedInitialPlanets_1 = require("../migrations/1732401000000
 const _1732560000000_AddShipPositionTracking_1 = require("../migrations/1732560000000-AddShipPositionTracking");
 const _1763723248333_AddGoodType_1 = require("../migrations/1763723248333-AddGoodType");
 const _1763723302921_AddMarketSellingFlag_1 = require("../migrations/1763723302921-AddMarketSellingFlag");
+const _1763724000000_AddFiftyGoods_1 = require("../migrations/1763724000000-AddFiftyGoods");
 exports.dataSourceOptions = {
     type: 'postgres',
     host: process.env.DB_HOST ?? 'localhost',
@@ -61,6 +62,7 @@ exports.dataSourceOptions = {
         _1732560000000_AddShipPositionTracking_1.AddShipPositionTracking1732560000000,
         _1763723248333_AddGoodType_1.AddGoodType1763723248333,
         _1763723302921_AddMarketSellingFlag_1.AddMarketSellingFlag1763723302921,
+        _1763724000000_AddFiftyGoods_1.AddFiftyGoods1763724000000,
     ],
 };
 const dataSource = new typeorm_1.DataSource(exports.dataSourceOptions);

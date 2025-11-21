@@ -18,6 +18,53 @@
   padding-bottom: 8px;
 }
 
+.planet-market__warning {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: #FFC107;
+  font-size: 13px;
+}
+
+.planet-market__cargo-info {
+  display: flex;
+  gap: 20px;
+  padding: 12px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.planet-market__cargo-stat {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.planet-market__cargo-label {
+  color: #aaa;
+  font-size: 12px;
+}
+
+.planet-market__cargo-value {
+  color: #4CAF50;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.planet-market__error-message {
+  background: rgba(244, 67, 54, 0.2);
+  border: 1px solid rgba(244, 67, 54, 0.5);
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: #f44336;
+  font-size: 13px;
+}
+
 .planet-market__section {
   margin-bottom: 24px;
 }
@@ -41,7 +88,7 @@
 
 .planet-market__table-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 12px;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.05);
@@ -54,13 +101,14 @@
 
 .planet-market__table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 12px;
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 4px;
   border-left: 3px solid transparent;
   transition: all 0.2s;
+  align-items: center;
 }
 
 .planet-market__table-row:hover {
@@ -98,6 +146,147 @@
   text-align: right;
 }
 
+.planet-market__col-action {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 150px;
+}
+
+.planet-market__buy-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.planet-market__buy-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.planet-market__buy-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.planet-market__sell-btn {
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.planet-market__sell-btn:hover:not(:disabled) {
+  background: #F57C00;
+}
+
+.planet-market__sell-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.planet-market__buy-form,
+.planet-market__sell-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.planet-market__quantity-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 12px;
+  width: 100%;
+}
+
+.planet-market__quantity-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.planet-market__buy-actions,
+.planet-market__sell-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.planet-market__confirm-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+  flex: 1;
+}
+
+.planet-market__confirm-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.planet-market__confirm-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.planet-market__cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.planet-market__cancel-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.planet-market__cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.planet-market__buy-warning,
+.planet-market__sell-warning {
+  color: #f44336;
+  font-size: 11px;
+  margin-top: -4px;
+}
+
+.planet-market__confirm-btn--sell {
+  background: #FF9800;
+}
+
+.planet-market__confirm-btn--sell:hover:not(:disabled) {
+  background: #F57C00;
+}
+
+.planet-market__no-demand {
+  color: #888;
+  font-size: 11px;
+  font-style: italic;
+}
+
 .planet-market__loading,
 .planet-market__error,
 .planet-market__empty {
@@ -129,3 +318,11 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Adjust table header for inventory section */
+.planet-market__table-header--inventory {
+  grid-template-columns: 2fr 1fr 1fr auto !important;
+}
+
+.planet-market__table-row--inventory {
+  grid-template-columns: 2fr 1fr 1fr auto !important;
+}

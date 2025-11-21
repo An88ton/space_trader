@@ -338,18 +338,21 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
       {/* Controls */}
       <div className="hex-grid-map__controls">
         <button
+          type="button"
           onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
           className="hex-grid-map__control-button"
         >
           +
         </button>
         <button
+          type="button"
           onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
           className="hex-grid-map__control-button"
         >
           −
         </button>
         <button
+          type="button"
           onClick={() => setZoom(1)}
           className="hex-grid-map__control-button"
         >
@@ -406,6 +409,7 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
               <br />
               <br />
               <button
+                type="button"
                 onClick={() => setShowMarket(!showMarket)}
                 style={{
                   padding: '8px 16px',
@@ -424,6 +428,7 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
               {playerPosition?.planetId !== selectedPlanet.id && sessionToken && (
                 <>
                   <button
+                    type="button"
                     onClick={handleTravel}
                     disabled={isTraveling}
                     style={{
@@ -454,6 +459,7 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
             </div>
           )}
           <button
+            type="button"
             onClick={() => {
               setSelectedHex(null);
               setSelectedPlanet(null);
@@ -474,6 +480,7 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
         <div className="hex-grid-map__market-modal">
           <div className="hex-grid-map__market-modal-content">
             <button
+              type="button"
               onClick={() => setShowMarket(false)}
               className="hex-grid-map__market-modal-close"
             >
@@ -483,6 +490,11 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
               planetQ={selectedPlanet.hexQ}
               planetR={selectedPlanet.hexR}
               planetName={selectedPlanet.name}
+              planetId={selectedPlanet.id}
+              sessionToken={sessionToken}
+              playerPosition={playerPosition}
+              onBuySuccess={onTravelSuccess}
+              onSellSuccess={onTravelSuccess}
             />
           </div>
         </div>

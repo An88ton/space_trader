@@ -206,8 +206,17 @@ function App() {
     : null
 
   useEffect(() => {
+    // Only change view when loginResult transitions from null to a value (login)
+    // or from a value to null (logout), not when it's just updated
     if (loginResult) {
-      setActiveView(VIEW.PLAYER)
+      // Only set to PLAYER if we're on LOGIN or REGISTER view (initial login)
+      // Don't change view if we're already on MAP or PLAYER view
+      setActiveView((prev) => {
+        if (prev === VIEW.LOGIN || prev === VIEW.REGISTER) {
+          return VIEW.PLAYER
+        }
+        return prev
+      })
     } else {
       setActiveView((prev) =>
         prev === VIEW.PLAYER ? VIEW.LOGIN : prev,

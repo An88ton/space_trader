@@ -23,6 +23,7 @@ import { SeedInitialPlanets1732401000000 } from '../migrations/1732401000000-See
 import { AddShipPositionTracking1732560000000 } from '../migrations/1732560000000-AddShipPositionTracking';
 import { AddGoodType1763723248333 } from '../migrations/1763723248333-AddGoodType';
 import { AddMarketSellingFlag1763723302921 } from '../migrations/1763723302921-AddMarketSellingFlag';
+import { AddFiftyGoods1763724000000 } from '../migrations/1763724000000-AddFiftyGoods';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -59,6 +60,7 @@ export const dataSourceOptions: DataSourceOptions = {
     AddShipPositionTracking1732560000000,
     AddGoodType1763723248333,
     AddMarketSellingFlag1763723302921,
+    AddFiftyGoods1763724000000,
   ],
 };
 

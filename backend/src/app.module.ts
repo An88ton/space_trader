@@ -7,6 +7,7 @@ import { dataSourceOptions } from './config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { UniverseModule } from './universe/universe.module';
 import { TravelModule } from './travel/travel.module';
+import { MarketModule } from './market/market.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TravelModule } from './travel/travel.module';
     AuthModule,
     UniverseModule,
     TravelModule,
+    MarketModule,
   ],
   controllers: [AppController],
   providers: [AppService],
