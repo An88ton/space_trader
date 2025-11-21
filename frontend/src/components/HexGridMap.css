@@ -1,0 +1,238 @@
+.hex-grid-map {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+  cursor: grab;
+}
+
+.hex-grid-map:active {
+  cursor: grabbing;
+}
+
+.hex-grid-map__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hex-grid-map__hex-group {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.hex-grid-map__hex-group:hover {
+  transform: scale(1.1);
+}
+
+.hex-grid-map__hex {
+  fill: rgba(255, 255, 255, 0.05);
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 1;
+  transition: all 0.2s;
+}
+
+.hex-grid-map__hex:hover {
+  fill: rgba(255, 255, 255, 0.1);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1.5;
+}
+
+.hex-grid-map__hex--has-planet {
+  fill: rgba(100, 150, 255, 0.15);
+  stroke: rgba(100, 150, 255, 0.4);
+}
+
+.hex-grid-map__hex--has-planet:hover {
+  fill: rgba(100, 150, 255, 0.25);
+  stroke: rgba(100, 150, 255, 0.6);
+}
+
+.hex-grid-map__hex--selected {
+  fill: rgba(255, 215, 0, 0.3);
+  stroke: rgba(255, 215, 0, 0.8);
+  stroke-width: 2;
+}
+
+.hex-grid-map__hex--path-start {
+  fill: rgba(0, 255, 0, 0.3);
+  stroke: rgba(0, 255, 0, 0.8);
+  stroke-width: 2;
+}
+
+.hex-grid-map__hex--in-path {
+  fill: rgba(0, 200, 255, 0.2);
+  stroke: rgba(0, 200, 255, 0.6);
+  stroke-width: 1.5;
+}
+
+.hex-grid-map__hex--player {
+  fill: rgba(255, 223, 0, 0.35);
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 2;
+  animation: hex-grid-map__player-pulse 2s ease-in-out infinite;
+}
+
+.hex-grid-map__planet-marker {
+  fill: rgba(255, 255, 100, 0.8);
+  stroke: rgba(255, 255, 100, 1);
+  stroke-width: 1;
+}
+
+.hex-grid-map__player-marker {
+  fill: #ffd700;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+@keyframes hex-grid-map__player-pulse {
+  0% {
+    stroke-width: 2;
+    opacity: 1;
+  }
+  50% {
+    stroke-width: 3;
+    opacity: 0.85;
+  }
+  100% {
+    stroke-width: 2;
+    opacity: 1;
+  }
+}
+
+.hex-grid-map__hex-label {
+  fill: rgba(255, 255, 255, 0.6);
+  font-family: monospace;
+  pointer-events: none;
+}
+
+.hex-grid-map__controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.hex-grid-map__control-button {
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.hex-grid-map__control-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.hex-grid-map__zoom-indicator {
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.hex-grid-map__info-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 300px;
+  z-index: 10;
+}
+
+.hex-grid-map__info-item {
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.hex-grid-map__info-item:last-child {
+  margin-bottom: 0;
+}
+
+.hex-grid-map__info-item strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffd700;
+}
+
+.hex-grid-map__info-item small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9em;
+}
+
+.hex-grid-map__close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.hex-grid-map__close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hex-grid-map__instructions {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.hex-grid-map__loading,
+.hex-grid-map__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: white;
+  gap: 20px;
+}
+
+.hex-grid-map__error button {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hex-grid-map__error button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
