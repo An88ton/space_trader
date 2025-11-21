@@ -46,6 +46,8 @@ export const derivePlayerStats = (user) => {
       coerceNumber(stats.cargoCapacity) ??
       coerceNumber(user.ship?.cargoCapacity) ??
       null,
+    cargoUsed: coerceNumber(stats.cargoUsed) ?? 0,
+    cargoItems: Array.isArray(stats.cargoItems) ? stats.cargoItems : [],
     fuel: ensureFuelStats(stats.fuel, fallbackFuel),
   }
 }

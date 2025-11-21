@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoggedInUserDto = exports.ShipPositionDto = exports.HexCoordinateDto = exports.PlayerStatsDto = exports.FuelStatsDto = exports.ShipSnapshotDto = void 0;
+exports.LoggedInUserDto = exports.ShipPositionDto = exports.HexCoordinateDto = exports.PlayerStatsDto = exports.CargoItemDto = exports.FuelStatsDto = exports.ShipSnapshotDto = void 0;
 class ShipSnapshotDto {
     id;
     name;
@@ -19,10 +19,18 @@ class FuelStatsDto {
     percentage;
 }
 exports.FuelStatsDto = FuelStatsDto;
+class CargoItemDto {
+    goodId;
+    goodName;
+    quantity;
+}
+exports.CargoItemDto = CargoItemDto;
 class PlayerStatsDto {
     credits;
     reputation;
     cargoCapacity;
+    cargoUsed;
+    cargoItems;
     fuel;
 }
 exports.PlayerStatsDto = PlayerStatsDto;

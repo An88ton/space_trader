@@ -168,7 +168,7 @@ let MarketService = class MarketService {
             if (!updatedUser) {
                 throw new common_1.NotFoundException('User not found after transaction');
             }
-            return this.buildLoggedInUserDto(updatedUser);
+            return await this.buildLoggedInUserDto(updatedUser, manager);
         });
     }
     async sellGoods(token, sellGoodsDto) {
@@ -283,7 +283,7 @@ let MarketService = class MarketService {
             if (!updatedUser) {
                 throw new common_1.NotFoundException('User not found after transaction');
             }
-            return this.buildLoggedInUserDto(updatedUser);
+            return await this.buildLoggedInUserDto(updatedUser, manager);
         });
     }
     async getInventory(token) {
@@ -351,7 +351,7 @@ let MarketService = class MarketService {
             ? Math.floor(version)
             : 0;
     }
-    buildLoggedInUserDto(user) {
+    async buildLoggedInUserDto(user, manager) {
         const activeAssignment = this.resolveActiveAssignment(user);
         const activeShip = activeAssignment?.ship ?? null;
         let ship = null;
@@ -383,10 +383,50 @@ let MarketService = class MarketService {
                 capacity: null,
                 percentage: null,
             };
+        let cargoUsed = 0;
+        const cargoItems = [];
+        if (activeShip) {
+            let inventories = [];
+            inventories = activeShip.inventories || [];
+            if (inventories.length > 0 && inventories[0].good === undefined) {
+                if (manager) {
+                    const inventoryRepo = manager.getRepository(player_inventory_entity_1.PlayerInventory);
+                    inventories = await inventoryRepo.find({
+                        where: { ship: { id: activeShip.id } },
+                        relations: ['good'],
+                    });
+                }
+                else {
+                    inventories = await this.inventoryRepository.find({
+                        where: { ship: { id: activeShip.id } },
+                        relations: ['good'],
+                    });
+                }
+            }
+            else if (inventories.length === 0 && manager) {
+                const inventoryRepo = manager.getRepository(player_inventory_entity_1.PlayerInventory);
+                inventories = await inventoryRepo.find({
+                    where: { ship: { id: activeShip.id } },
+                    relations: ['good'],
+                });
+            }
+            cargoItems.push(...inventories
+                .filter((inv) => inv.quantity > 0)
+                .map((inv) => {
+                cargoUsed += inv.quantity;
+                return {
+                    goodId: inv.good.id,
+                    goodName: inv.good.name,
+                    quantity: inv.quantity,
+                };
+            }));
+        }
         const stats = {
             credits: user.credits,
             reputation: user.reputation,
             cargoCapacity: activeShip?.cargoCapacity ?? null,
+            cargoUsed,
+            cargoItems,
             fuel: fuelStats,
         };
         const planetCandidate = activeAssignment?.currentPlanet ?? null;

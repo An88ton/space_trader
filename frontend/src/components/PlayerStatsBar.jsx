@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { derivePlayerStats } from '../utils/playerStats'
 
 const formatNumber = (value) =>
   typeof value === 'number' ? value.toLocaleString() : value
 
 const PlayerStatsBar = ({ user, onLogout, isLoggingOut }) => {
+  const [isCargoExpanded, setIsCargoExpanded] = useState(false)
   if (!user) {
     return null
   }
@@ -30,10 +32,22 @@ const PlayerStatsBar = ({ user, onLogout, isLoggingOut }) => {
     typeof stats.cargoCapacity === 'number'
       ? `${stats.cargoCapacity} units`
       : 'Awaiting ship'
+  const hasCargoReadings =
+    typeof stats.cargoUsed === 'number' &&
+    typeof stats.cargoCapacity === 'number'
+  const cargoValue = hasCargoReadings
+    ? `${stats.cargoUsed}/${stats.cargoCapacity}${
+        stats.cargoCapacity > 0
+          ? ` (${Math.round((stats.cargoUsed / stats.cargoCapacity) * 100)}%)`
+          : ''
+      }`
+    : 'Awaiting ship'
   const locationPlanet = user.position?.planetName ?? 'Unknown sector'
   const locationHex = user.position?.hex
     ? `(${user.position.hex.q}, ${user.position.hex.r})`
     : 'acquiring coordinates'
+  const cargoItems = Array.isArray(stats.cargoItems) ? stats.cargoItems : []
+  const hasCargo = cargoItems.length > 0
 
   return (
     <section
@@ -74,6 +88,10 @@ const PlayerStatsBar = ({ user, onLogout, isLoggingOut }) => {
           <dd>{fuelValue}</dd>
         </div>
         <div>
+          <dt>Cargo</dt>
+          <dd>{cargoValue}</dd>
+        </div>
+        <div>
           <dt>Ship capacity</dt>
           <dd>{capacityValue}</dd>
         </div>
@@ -90,6 +108,40 @@ const PlayerStatsBar = ({ user, onLogout, isLoggingOut }) => {
           </dd>
         </div>
       </dl>
+
+      {hasCargo && (
+        <div className="player-stats-bar__cargo">
+          <button
+            type="button"
+            className="player-stats-bar__cargo-toggle"
+            onClick={() => setIsCargoExpanded(!isCargoExpanded)}
+            aria-expanded={isCargoExpanded}
+            aria-controls="cargo-contents"
+          >
+            <h3 className="player-stats-bar__cargo-title">Cargo Contents</h3>
+            <span className="player-stats-bar__cargo-arrow">
+              {isCargoExpanded ? '▼' : '▶'}
+            </span>
+          </button>
+          {isCargoExpanded && (
+            <ul
+              id="cargo-contents"
+              className="player-stats-bar__cargo-list"
+            >
+              {cargoItems.map((item) => (
+                <li key={item.goodId} className="player-stats-bar__cargo-item">
+                  <span className="player-stats-bar__cargo-good">
+                    {item.goodName}
+                  </span>
+                  <span className="player-stats-bar__cargo-quantity">
+                    {formatNumber(item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </section>
   )
 }

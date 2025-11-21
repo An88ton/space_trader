@@ -1,5 +1,6 @@
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { PlayerInventory } from '../entities/player-inventory.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisteredUserDto } from './dto/registered-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -7,10 +8,11 @@ import { JwtService } from '@nestjs/jwt';
 import { SessionDto } from './dto/session.dto';
 export declare class AuthService {
     private readonly userRepository;
+    private readonly inventoryRepository;
     private readonly jwtService;
     private readonly saltRounds;
     private readonly startingPlanetName;
-    constructor(userRepository: Repository<User>, jwtService: JwtService);
+    constructor(userRepository: Repository<User>, inventoryRepository: Repository<PlayerInventory>, jwtService: JwtService);
     register({ email: rawEmail, password: rawPassword, }: RegisterUserDto): Promise<RegisteredUserDto>;
     login({ email: rawEmail, password: rawPassword, }: LoginUserDto): Promise<SessionDto>;
     resumeSession(token: string): Promise<SessionDto>;

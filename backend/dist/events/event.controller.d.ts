@@ -7,13 +7,15 @@ import { EventChoiceResponseDto } from './dto/event-choice.dto';
 import { User } from '../entities/user.entity';
 import { Ship } from '../entities/ship.entity';
 import { UserShip } from '../entities/user-ship.entity';
+import { PlayerInventory } from '../entities/player-inventory.entity';
 export declare class EventController {
     private readonly eventService;
     private readonly jwtService;
     private readonly userRepository;
     private readonly shipRepository;
     private readonly userShipRepository;
-    constructor(eventService: EventService, jwtService: JwtService, userRepository: Repository<User>, shipRepository: Repository<Ship>, userShipRepository: Repository<UserShip>);
+    private readonly inventoryRepository;
+    constructor(eventService: EventService, jwtService: JwtService, userRepository: Repository<User>, shipRepository: Repository<Ship>, userShipRepository: Repository<UserShip>, inventoryRepository: Repository<PlayerInventory>);
     private verifySessionToken;
     private extractToken;
     getTravelEvents(authorization: string | undefined): Promise<EventResponseDto[]>;

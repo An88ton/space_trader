@@ -21,6 +21,7 @@ const ship_entity_1 = require("../entities/ship.entity");
 const planet_entity_1 = require("../entities/planet.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
 const travel_log_entity_1 = require("../entities/travel-log.entity");
+const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const event_entity_1 = require("../entities/event.entity");
 const hex_coordinates_1 = require("../utils/hex-coordinates");
 const jwt_1 = require("@nestjs/jwt");
@@ -31,14 +32,16 @@ let TravelService = class TravelService {
     planetRepository;
     userShipRepository;
     travelLogRepository;
+    inventoryRepository;
     jwtService;
     eventService;
-    constructor(userRepository, shipRepository, planetRepository, userShipRepository, travelLogRepository, jwtService, eventService) {
+    constructor(userRepository, shipRepository, planetRepository, userShipRepository, travelLogRepository, inventoryRepository, jwtService, eventService) {
         this.userRepository = userRepository;
         this.shipRepository = shipRepository;
         this.planetRepository = planetRepository;
         this.userShipRepository = userShipRepository;
         this.travelLogRepository = travelLogRepository;
+        this.inventoryRepository = inventoryRepository;
         this.jwtService = jwtService;
         this.eventService = eventService;
     }
@@ -133,7 +136,11 @@ let TravelService = class TravelService {
                 where: { id: user.id },
                 relations: {
                     userShips: {
-                        ship: true,
+                        ship: {
+                            inventories: {
+                                good: true,
+                            },
+                        },
                         currentPlanet: true,
                     },
                 },
@@ -152,7 +159,7 @@ let TravelService = class TravelService {
                 destinationPlanetId: destinationPlanet.id,
                 destinationPlanetName: destinationPlanet.name,
             };
-            const userDto = this.buildLoggedInUserDto(updatedUser);
+            const userDto = await this.buildLoggedInUserDto(updatedUser);
             let eventMessage = '';
             if (eventResult.event) {
                 eventMessage = ` ${eventResult.description}`;
@@ -237,7 +244,7 @@ let TravelService = class TravelService {
         const activeAssignment = assignments.find((userShip) => userShip.isActive && userShip.ship);
         return activeAssignment ?? null;
     }
-    buildLoggedInUserDto(user) {
+    async buildLoggedInUserDto(user) {
         const activeAssignment = this.resolveActiveAssignment(user);
         const activeShip = activeAssignment?.ship ?? null;
         let ship = null;
@@ -269,10 +276,36 @@ let TravelService = class TravelService {
                 capacity: null,
                 percentage: null,
             };
+        let cargoUsed = 0;
+        const cargoItems = [];
+        if (activeShip) {
+            let inventories = [];
+            if (activeShip.inventories && Array.isArray(activeShip.inventories)) {
+                inventories = activeShip.inventories;
+            }
+            else {
+                inventories = await this.inventoryRepository.find({
+                    where: { ship: { id: activeShip.id } },
+                    relations: ['good'],
+                });
+            }
+            cargoItems.push(...inventories
+                .filter((inv) => inv.quantity > 0)
+                .map((inv) => {
+                cargoUsed += inv.quantity;
+                return {
+                    goodId: inv.good.id,
+                    goodName: inv.good.name,
+                    quantity: inv.quantity,
+                };
+            }));
+        }
         const stats = {
             credits: user.credits,
             reputation: user.reputation,
             cargoCapacity: activeShip?.cargoCapacity ?? null,
+            cargoUsed,
+            cargoItems,
             fuel: fuelStats,
         };
         const planetCandidate = activeAssignment?.currentPlanet ?? null;
@@ -312,7 +345,9 @@ exports.TravelService = TravelService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(planet_entity_1.Planet)),
     __param(3, (0, typeorm_1.InjectRepository)(user_ship_entity_1.UserShip)),
     __param(4, (0, typeorm_1.InjectRepository)(travel_log_entity_1.TravelLog)),
+    __param(5, (0, typeorm_1.InjectRepository)(player_inventory_entity_1.PlayerInventory)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

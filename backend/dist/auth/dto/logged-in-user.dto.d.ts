@@ -14,10 +14,17 @@ export declare class FuelStatsDto {
     capacity: number | null;
     percentage: number | null;
 }
+export declare class CargoItemDto {
+    goodId: number;
+    goodName: string;
+    quantity: number;
+}
 export declare class PlayerStatsDto {
     credits: number;
     reputation: number;
     cargoCapacity: number | null;
+    cargoUsed: number;
+    cargoItems: CargoItemDto[];
     fuel: FuelStatsDto;
 }
 export declare class HexCoordinateDto {

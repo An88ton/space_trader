@@ -11,10 +11,12 @@ import { EntityManager, Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Ship } from '../entities/ship.entity';
 import { UserShip } from '../entities/user-ship.entity';
+import { PlayerInventory } from '../entities/player-inventory.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisteredUserDto } from './dto/registered-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import {
+  CargoItemDto,
   FuelStatsDto,
   LoggedInUserDto,
   PlayerStatsDto,
@@ -48,6 +50,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(PlayerInventory)
+    private readonly inventoryRepository: Repository<PlayerInventory>,
     private readonly jwtService: JwtService,
   ) {
     this.startingPlanetName =
@@ -127,7 +131,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    return this.buildSessionDto(user);
+    return await this.buildSessionDto(user);
   }
 
   async resumeSession(token: string): Promise<SessionDto> {
@@ -143,7 +147,7 @@ export class AuthService {
     });
     const authenticatedUser = this.ensureSessionIsCurrent(user, payload);
 
-    return this.buildSessionDto(authenticatedUser);
+    return await this.buildSessionDto(authenticatedUser);
   }
 
   async logout(token: string): Promise<{ success: true }> {
@@ -193,7 +197,7 @@ export class AuthService {
     return candidate;
   }
 
-  private buildLoggedInUserDto(user: User): LoggedInUserDto {
+  private async buildLoggedInUserDto(user: User): Promise<LoggedInUserDto> {
     const activeAssignment = this.resolveActiveAssignment(user);
     const activeShip = activeAssignment?.ship ?? null;
     let ship: ShipSnapshotDto | null = null;
@@ -236,10 +240,45 @@ export class AuthService {
           percentage: null,
         };
 
+    // Load cargo inventory for the active ship
+    let cargoUsed = 0;
+    const cargoItems: CargoItemDto[] = [];
+
+    if (activeShip) {
+      // Check if inventories are already loaded on the ship object
+      let inventories: PlayerInventory[] = [];
+
+      if (activeShip.inventories && Array.isArray(activeShip.inventories)) {
+        // Use already-loaded inventories
+        inventories = activeShip.inventories;
+      } else {
+        // Query inventories if not already loaded
+        inventories = await this.inventoryRepository.find({
+          where: { ship: { id: activeShip.id } },
+          relations: ['good'],
+        });
+      }
+
+      cargoItems.push(
+        ...inventories
+          .filter((inv) => inv.quantity > 0)
+          .map((inv) => {
+            cargoUsed += inv.quantity;
+            return {
+              goodId: inv.good.id,
+              goodName: inv.good.name,
+              quantity: inv.quantity,
+            };
+          }),
+      );
+    }
+
     const stats: PlayerStatsDto = {
       credits: user.credits,
       reputation: user.reputation,
       cargoCapacity: activeShip?.cargoCapacity ?? null,
+      cargoUsed,
+      cargoItems,
       fuel: fuelStats,
     };
 
@@ -258,14 +297,14 @@ export class AuthService {
     };
   }
 
-  private buildSessionDto(user: User): SessionDto {
+  private async buildSessionDto(user: User): Promise<SessionDto> {
     const sessionVersion = this.resolveTokenVersion(user.sessionVersion);
     const payload = { sub: user.id, email: user.email, ver: sessionVersion };
     const accessToken = this.jwtService.sign(payload);
 
     return {
       accessToken,
-      user: this.buildLoggedInUserDto(user),
+      user: await this.buildLoggedInUserDto(user),
     };
   }
 

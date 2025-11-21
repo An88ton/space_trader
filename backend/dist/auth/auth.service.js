@@ -54,6 +54,7 @@ const typeorm_2 = require("typeorm");
 const user_entity_1 = require("../entities/user.entity");
 const ship_entity_1 = require("../entities/ship.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
+const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const jwt_1 = require("@nestjs/jwt");
 const planet_entity_1 = require("../entities/planet.entity");
 const STARTING_SHIP_BLUEPRINT = {
@@ -66,11 +67,13 @@ const STARTING_SHIP_BLUEPRINT = {
 };
 let AuthService = class AuthService {
     userRepository;
+    inventoryRepository;
     jwtService;
     saltRounds = 12;
     startingPlanetName;
-    constructor(userRepository, jwtService) {
+    constructor(userRepository, inventoryRepository, jwtService) {
         this.userRepository = userRepository;
+        this.inventoryRepository = inventoryRepository;
         this.jwtService = jwtService;
         this.startingPlanetName =
             process.env.STARTING_PLANET_NAME?.trim() || 'Alpha Prime';
@@ -123,7 +126,7 @@ let AuthService = class AuthService {
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid email or password');
         }
-        return this.buildSessionDto(user);
+        return await this.buildSessionDto(user);
     }
     async resumeSession(token) {
         const payload = await this.verifySessionToken(token);
@@ -137,7 +140,7 @@ let AuthService = class AuthService {
             },
         });
         const authenticatedUser = this.ensureSessionIsCurrent(user, payload);
-        return this.buildSessionDto(authenticatedUser);
+        return await this.buildSessionDto(authenticatedUser);
     }
     async logout(token) {
         const payload = await this.verifySessionToken(token);
@@ -171,7 +174,7 @@ let AuthService = class AuthService {
         }
         return candidate;
     }
-    buildLoggedInUserDto(user) {
+    async buildLoggedInUserDto(user) {
         const activeAssignment = this.resolveActiveAssignment(user);
         const activeShip = activeAssignment?.ship ?? null;
         let ship = null;
@@ -203,10 +206,36 @@ let AuthService = class AuthService {
                 capacity: null,
                 percentage: null,
             };
+        let cargoUsed = 0;
+        const cargoItems = [];
+        if (activeShip) {
+            let inventories = [];
+            if (activeShip.inventories && Array.isArray(activeShip.inventories)) {
+                inventories = activeShip.inventories;
+            }
+            else {
+                inventories = await this.inventoryRepository.find({
+                    where: { ship: { id: activeShip.id } },
+                    relations: ['good'],
+                });
+            }
+            cargoItems.push(...inventories
+                .filter((inv) => inv.quantity > 0)
+                .map((inv) => {
+                cargoUsed += inv.quantity;
+                return {
+                    goodId: inv.good.id,
+                    goodName: inv.good.name,
+                    quantity: inv.quantity,
+                };
+            }));
+        }
         const stats = {
             credits: user.credits,
             reputation: user.reputation,
             cargoCapacity: activeShip?.cargoCapacity ?? null,
+            cargoUsed,
+            cargoItems,
             fuel: fuelStats,
         };
         return {
@@ -223,13 +252,13 @@ let AuthService = class AuthService {
             position: this.buildShipPositionDto(activeAssignment),
         };
     }
-    buildSessionDto(user) {
+    async buildSessionDto(user) {
         const sessionVersion = this.resolveTokenVersion(user.sessionVersion);
         const payload = { sub: user.id, email: user.email, ver: sessionVersion };
         const accessToken = this.jwtService.sign(payload);
         return {
             accessToken,
-            user: this.buildLoggedInUserDto(user),
+            user: await this.buildLoggedInUserDto(user),
         };
     }
     normalizeEmailInput(email) {
@@ -340,7 +369,9 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(1, (0, typeorm_1.InjectRepository)(player_inventory_entity_1.PlayerInventory)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         jwt_1.JwtService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

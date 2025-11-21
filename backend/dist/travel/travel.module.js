@@ -15,6 +15,7 @@ const ship_entity_1 = require("../entities/ship.entity");
 const planet_entity_1 = require("../entities/planet.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
 const travel_log_entity_1 = require("../entities/travel-log.entity");
+const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const travel_controller_1 = require("./travel.controller");
 const travel_service_1 = require("./travel.service");
 const event_module_1 = require("../events/event.module");
@@ -24,7 +25,7 @@ exports.TravelModule = TravelModule;
 exports.TravelModule = TravelModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, ship_entity_1.Ship, planet_entity_1.Planet, user_ship_entity_1.UserShip, travel_log_entity_1.TravelLog]),
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, ship_entity_1.Ship, planet_entity_1.Planet, user_ship_entity_1.UserShip, travel_log_entity_1.TravelLog, player_inventory_entity_1.PlayerInventory]),
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET ?? 'space-trader-super-secret',
             }),

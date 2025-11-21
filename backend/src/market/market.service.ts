@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, EntityManager } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../entities/user.entity';
 import { Ship } from '../entities/ship.entity';
@@ -19,6 +19,7 @@ import { BuyGoodsDto } from './dto/buy-goods.dto';
 import { SellGoodsDto } from './dto/sell-goods.dto';
 import { LoggedInUserDto } from '../auth/dto/logged-in-user.dto';
 import {
+  CargoItemDto,
   ShipSnapshotDto,
   FuelStatsDto,
   PlayerStatsDto,
@@ -240,7 +241,7 @@ export class MarketService {
         throw new NotFoundException('User not found after transaction');
       }
 
-      return this.buildLoggedInUserDto(updatedUser);
+      return await this.buildLoggedInUserDto(updatedUser, manager);
     });
   }
 
@@ -428,7 +429,7 @@ export class MarketService {
         throw new NotFoundException('User not found after transaction');
       }
 
-      return this.buildLoggedInUserDto(updatedUser);
+      return await this.buildLoggedInUserDto(updatedUser, manager);
     });
   }
 
@@ -531,7 +532,10 @@ export class MarketService {
       : 0;
   }
 
-  private buildLoggedInUserDto(user: User): LoggedInUserDto {
+  private async buildLoggedInUserDto(
+    user: User,
+    manager?: EntityManager,
+  ): Promise<LoggedInUserDto> {
     const activeAssignment = this.resolveActiveAssignment(user);
     const activeShip = activeAssignment?.ship ?? null;
     let ship: ShipSnapshotDto | null = null;
@@ -574,10 +578,64 @@ export class MarketService {
           percentage: null,
         };
 
+    // Load cargo inventory for the active ship
+    let cargoUsed = 0;
+    const cargoItems: CargoItemDto[] = [];
+
+    if (activeShip) {
+      // Load cargo inventory for the active ship
+      let inventories: PlayerInventory[] = [];
+
+      // Use the same approach as getInventory - directly access ship.inventories
+      // which should be loaded when user was reloaded with relations
+      inventories = activeShip.inventories || [];
+      
+      // If inventories array exists but good relations aren't loaded, query them
+      if (inventories.length > 0 && inventories[0].good === undefined) {
+        if (manager) {
+          // Query using transaction manager's repository
+          const inventoryRepo = manager.getRepository(PlayerInventory);
+          inventories = await inventoryRepo.find({
+            where: { ship: { id: activeShip.id } },
+            relations: ['good'],
+          });
+        } else {
+          // Query using regular repository
+          inventories = await this.inventoryRepository.find({
+            where: { ship: { id: activeShip.id } },
+            relations: ['good'],
+          });
+        }
+      } else if (inventories.length === 0 && manager) {
+        // If no inventories found but we're in a transaction, query to be sure
+        // (in case the relation wasn't loaded)
+        const inventoryRepo = manager.getRepository(PlayerInventory);
+        inventories = await inventoryRepo.find({
+          where: { ship: { id: activeShip.id } },
+          relations: ['good'],
+        });
+      }
+
+      cargoItems.push(
+        ...inventories
+          .filter((inv) => inv.quantity > 0)
+          .map((inv) => {
+            cargoUsed += inv.quantity;
+            return {
+              goodId: inv.good.id,
+              goodName: inv.good.name,
+              quantity: inv.quantity,
+            };
+          }),
+      );
+    }
+
     const stats: PlayerStatsDto = {
       credits: user.credits,
       reputation: user.reputation,
       cargoCapacity: activeShip?.cargoCapacity ?? null,
+      cargoUsed,
+      cargoItems,
       fuel: fuelStats,
     };
 

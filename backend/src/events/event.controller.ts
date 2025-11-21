@@ -19,6 +19,8 @@ import { EventChoiceResponseDto } from './dto/event-choice.dto';
 import { User } from '../entities/user.entity';
 import { Ship } from '../entities/ship.entity';
 import { UserShip } from '../entities/user-ship.entity';
+import { PlayerInventory } from '../entities/player-inventory.entity';
+import { CargoItemDto } from '../auth/dto/logged-in-user.dto';
 
 type SessionTokenPayload = {
   sub: number;
@@ -37,6 +39,8 @@ export class EventController {
     private readonly shipRepository: Repository<Ship>,
     @InjectRepository(UserShip)
     private readonly userShipRepository: Repository<UserShip>,
+    @InjectRepository(PlayerInventory)
+    private readonly inventoryRepository: Repository<PlayerInventory>,
   ) {}
 
   private async verifySessionToken(
@@ -162,7 +166,11 @@ export class EventController {
       where: { id: user.id },
       relations: {
         userShips: {
-          ship: true,
+          ship: {
+            inventories: {
+              good: true,
+            },
+          },
           currentPlanet: true,
         },
       },
@@ -177,6 +185,34 @@ export class EventController {
       (us) => us.isActive && us.ship,
     );
     const activeShip = updatedActiveAssignment?.ship ?? null;
+
+    // Load cargo inventory
+    let cargoUsed = 0;
+    const cargoItems: CargoItemDto[] = [];
+
+    if (activeShip) {
+      // Use already-loaded inventories if available
+      const inventories =
+        activeShip.inventories && Array.isArray(activeShip.inventories)
+          ? activeShip.inventories
+          : await this.inventoryRepository.find({
+              where: { ship: { id: activeShip.id } },
+              relations: ['good'],
+            });
+
+      cargoItems.push(
+        ...inventories
+          .filter((inv) => inv.quantity > 0)
+          .map((inv) => {
+            cargoUsed += inv.quantity;
+            return {
+              goodId: inv.good.id,
+              goodName: inv.good.name,
+              quantity: inv.quantity,
+            };
+          }),
+      );
+    }
 
     const userDto = {
       id: updatedUser.id,
@@ -204,6 +240,8 @@ export class EventController {
         credits: updatedUser.credits,
         reputation: updatedUser.reputation,
         cargoCapacity: activeShip?.cargoCapacity ?? null,
+        cargoUsed,
+        cargoItems,
         fuel: activeShip
           ? {
               current: activeShip.fuelCurrent,

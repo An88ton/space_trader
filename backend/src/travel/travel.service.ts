@@ -11,12 +11,14 @@ import { Ship } from '../entities/ship.entity';
 import { Planet } from '../entities/planet.entity';
 import { UserShip } from '../entities/user-ship.entity';
 import { TravelLog } from '../entities/travel-log.entity';
+import { PlayerInventory } from '../entities/player-inventory.entity';
 import { Event } from '../entities/event.entity';
 import { TravelRequestDto } from './dto/travel-request.dto';
 import { TravelResponseDto, TravelLogDto, TravelEventResultDto, TravelEventDto } from './dto/travel-response.dto';
 import { hexDistance, HexCoordinate } from '../utils/hex-coordinates';
 import { JwtService } from '@nestjs/jwt';
 import {
+  CargoItemDto,
   LoggedInUserDto,
   ShipSnapshotDto,
   FuelStatsDto,
@@ -44,6 +46,8 @@ export class TravelService {
     private readonly userShipRepository: Repository<UserShip>,
     @InjectRepository(TravelLog)
     private readonly travelLogRepository: Repository<TravelLog>,
+    @InjectRepository(PlayerInventory)
+    private readonly inventoryRepository: Repository<PlayerInventory>,
     private readonly jwtService: JwtService,
     private readonly eventService: EventService,
   ) {}
@@ -204,7 +208,11 @@ export class TravelService {
           where: { id: user.id },
           relations: {
             userShips: {
-              ship: true,
+              ship: {
+                inventories: {
+                  good: true,
+                },
+              },
               currentPlanet: true,
             },
           },
@@ -227,7 +235,7 @@ export class TravelService {
           destinationPlanetName: destinationPlanet.name,
         };
 
-        const userDto = this.buildLoggedInUserDto(updatedUser);
+        const userDto = await this.buildLoggedInUserDto(updatedUser);
 
         // Build event message
         let eventMessage = '';
@@ -332,7 +340,7 @@ export class TravelService {
     return activeAssignment ?? null;
   }
 
-  private buildLoggedInUserDto(user: User): LoggedInUserDto {
+  private async buildLoggedInUserDto(user: User): Promise<LoggedInUserDto> {
     const activeAssignment = this.resolveActiveAssignment(user);
     const activeShip = activeAssignment?.ship ?? null;
     let ship: ShipSnapshotDto | null = null;
@@ -375,10 +383,45 @@ export class TravelService {
           percentage: null,
         };
 
+    // Load cargo inventory for the active ship
+    let cargoUsed = 0;
+    const cargoItems: CargoItemDto[] = [];
+
+    if (activeShip) {
+      // Check if inventories are already loaded on the ship object
+      let inventories: PlayerInventory[] = [];
+
+      if (activeShip.inventories && Array.isArray(activeShip.inventories)) {
+        // Use already-loaded inventories
+        inventories = activeShip.inventories;
+      } else {
+        // Query inventories if not already loaded
+        inventories = await this.inventoryRepository.find({
+          where: { ship: { id: activeShip.id } },
+          relations: ['good'],
+        });
+      }
+
+      cargoItems.push(
+        ...inventories
+          .filter((inv) => inv.quantity > 0)
+          .map((inv) => {
+            cargoUsed += inv.quantity;
+            return {
+              goodId: inv.good.id,
+              goodName: inv.good.name,
+              quantity: inv.quantity,
+            };
+          }),
+      );
+    }
+
     const stats: PlayerStatsDto = {
       credits: user.credits,
       reputation: user.reputation,
       cargoCapacity: activeShip?.cargoCapacity ?? null,
+      cargoUsed,
+      cargoItems,
       fuel: fuelStats,
     };
 

@@ -16,10 +16,18 @@ export class FuelStatsDto {
   percentage: number | null;
 }
 
+export class CargoItemDto {
+  goodId: number;
+  goodName: string;
+  quantity: number;
+}
+
 export class PlayerStatsDto {
   credits: number;
   reputation: number;
   cargoCapacity: number | null;
+  cargoUsed: number;
+  cargoItems: CargoItemDto[];
   fuel: FuelStatsDto;
 }
 

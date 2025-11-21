@@ -21,18 +21,21 @@ const jwt_1 = require("@nestjs/jwt");
 const user_entity_1 = require("../entities/user.entity");
 const ship_entity_1 = require("../entities/ship.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
+const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 let EventController = class EventController {
     eventService;
     jwtService;
     userRepository;
     shipRepository;
     userShipRepository;
-    constructor(eventService, jwtService, userRepository, shipRepository, userShipRepository) {
+    inventoryRepository;
+    constructor(eventService, jwtService, userRepository, shipRepository, userShipRepository, inventoryRepository) {
         this.eventService = eventService;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.shipRepository = shipRepository;
         this.userShipRepository = userShipRepository;
+        this.inventoryRepository = inventoryRepository;
     }
     async verifySessionToken(token) {
         try {
@@ -109,7 +112,11 @@ let EventController = class EventController {
             where: { id: user.id },
             relations: {
                 userShips: {
-                    ship: true,
+                    ship: {
+                        inventories: {
+                            good: true,
+                        },
+                    },
                     currentPlanet: true,
                 },
             },
@@ -119,6 +126,26 @@ let EventController = class EventController {
         }
         const updatedActiveAssignment = updatedUser.userShips?.find((us) => us.isActive && us.ship);
         const activeShip = updatedActiveAssignment?.ship ?? null;
+        let cargoUsed = 0;
+        const cargoItems = [];
+        if (activeShip) {
+            const inventories = activeShip.inventories && Array.isArray(activeShip.inventories)
+                ? activeShip.inventories
+                : await this.inventoryRepository.find({
+                    where: { ship: { id: activeShip.id } },
+                    relations: ['good'],
+                });
+            cargoItems.push(...inventories
+                .filter((inv) => inv.quantity > 0)
+                .map((inv) => {
+                cargoUsed += inv.quantity;
+                return {
+                    goodId: inv.good.id,
+                    goodName: inv.good.name,
+                    quantity: inv.quantity,
+                };
+            }));
+        }
         const userDto = {
             id: updatedUser.id,
             email: updatedUser.email,
@@ -145,6 +172,8 @@ let EventController = class EventController {
                 credits: updatedUser.credits,
                 reputation: updatedUser.reputation,
                 cargoCapacity: activeShip?.cargoCapacity ?? null,
+                cargoUsed,
+                cargoItems,
                 fuel: activeShip
                     ? {
                         current: activeShip.fuelCurrent,
@@ -217,8 +246,10 @@ exports.EventController = EventController = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(3, (0, typeorm_1.InjectRepository)(ship_entity_1.Ship)),
     __param(4, (0, typeorm_1.InjectRepository)(user_ship_entity_1.UserShip)),
+    __param(5, (0, typeorm_1.InjectRepository)(player_inventory_entity_1.PlayerInventory)),
     __metadata("design:paramtypes", [event_service_1.EventService,
         jwt_1.JwtService,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository])
