@@ -253,7 +253,14 @@ function App() {
                 Back to Dashboard
               </button>
             </div>
-            <HexGridMap playerPosition={playerPosition} />
+            <HexGridMap 
+              playerPosition={playerPosition}
+              sessionToken={sessionTokenRef.current}
+              onTravelSuccess={(updatedUser) => {
+                // Update user state with the updated user from travel response
+                setLoginResult(updatedUser);
+              }}
+            />
           </div>
         </div>
       )}

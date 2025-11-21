@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { dataSourceOptions } from './config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { UniverseModule } from './universe/universe.module';
+import { TravelModule } from './travel/travel.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UniverseModule } from './universe/universe.module';
     }),
     AuthModule,
     UniverseModule,
+    TravelModule,
   ],
   controllers: [AppController],
   providers: [AppService],

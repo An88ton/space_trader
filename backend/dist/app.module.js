@@ -15,6 +15,7 @@ const app_service_1 = require("./app.service");
 const typeorm_config_1 = require("./config/typeorm.config");
 const auth_module_1 = require("./auth/auth.module");
 const universe_module_1 = require("./universe/universe.module");
+const travel_module_1 = require("./travel/travel.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -28,6 +29,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             auth_module_1.AuthModule,
             universe_module_1.UniverseModule,
+            travel_module_1.TravelModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

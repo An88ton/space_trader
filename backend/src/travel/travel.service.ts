@@ -1,0 +1,326 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, EntityManager } from 'typeorm';
+import { User } from '../entities/user.entity';
+import { Ship } from '../entities/ship.entity';
+import { Planet } from '../entities/planet.entity';
+import { UserShip } from '../entities/user-ship.entity';
+import { TravelLog } from '../entities/travel-log.entity';
+import { TravelRequestDto } from './dto/travel-request.dto';
+import { TravelResponseDto, TravelLogDto } from './dto/travel-response.dto';
+import { hexDistance, HexCoordinate } from '../utils/hex-coordinates';
+import { JwtService } from '@nestjs/jwt';
+import {
+  LoggedInUserDto,
+  ShipSnapshotDto,
+  FuelStatsDto,
+  PlayerStatsDto,
+  ShipPositionDto,
+} from '../auth/dto/logged-in-user.dto';
+
+type SessionTokenPayload = {
+  sub: number;
+  email: string;
+  ver?: number;
+};
+
+@Injectable()
+export class TravelService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Ship)
+    private readonly shipRepository: Repository<Ship>,
+    @InjectRepository(Planet)
+    private readonly planetRepository: Repository<Planet>,
+    @InjectRepository(UserShip)
+    private readonly userShipRepository: Repository<UserShip>,
+    @InjectRepository(TravelLog)
+    private readonly travelLogRepository: Repository<TravelLog>,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async travel(
+    token: string,
+    travelRequest: TravelRequestDto,
+  ): Promise<TravelResponseDto> {
+    // Verify and extract user from token
+    const payload = await this.verifySessionToken(token);
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+      relations: {
+        userShips: {
+          ship: true,
+          currentPlanet: true,
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify session is current
+    this.ensureSessionIsCurrent(user, payload);
+
+    // Get active ship assignment
+    const activeAssignment = this.resolveActiveAssignment(user);
+    if (!activeAssignment || !activeAssignment.ship) {
+      throw new BadRequestException('No active ship found');
+    }
+
+    const ship = activeAssignment.ship;
+    const currentPlanet = activeAssignment.currentPlanet;
+
+    if (!currentPlanet) {
+      throw new BadRequestException('Ship is not currently at a planet');
+    }
+
+    // Get destination planet
+    const destinationPlanet = await this.planetRepository.findOne({
+      where: { id: travelRequest.destinationPlanetId },
+    });
+
+    if (!destinationPlanet) {
+      throw new NotFoundException('Destination planet not found');
+    }
+
+    if (destinationPlanet.id === currentPlanet.id) {
+      throw new BadRequestException('Already at destination planet');
+    }
+
+    // Validate hex coordinates exist
+    if (
+      currentPlanet.hexQ === null ||
+      currentPlanet.hexR === null ||
+      destinationPlanet.hexQ === null ||
+      destinationPlanet.hexR === null
+    ) {
+      throw new BadRequestException(
+        'Planets must have valid hex coordinates to travel',
+      );
+    }
+
+    // Calculate distance and fuel required
+    const from: HexCoordinate = {
+      q: currentPlanet.hexQ,
+      r: currentPlanet.hexR,
+    };
+    const to: HexCoordinate = {
+      q: destinationPlanet.hexQ,
+      r: destinationPlanet.hexR,
+    };
+    const distance = hexDistance(from, to);
+    const fuelRequired = distance; // 1 fuel per hex distance
+
+    // Check if ship has enough fuel
+    if (ship.fuelCurrent < fuelRequired) {
+      throw new BadRequestException(
+        `Insufficient fuel. Need ${fuelRequired}, have ${ship.fuelCurrent}`,
+      );
+    }
+
+    // Check if user has enough credits for docking fee
+    const dockingFee = destinationPlanet.dockingFee;
+    if (user.credits < dockingFee) {
+      throw new BadRequestException(
+        `Insufficient credits for docking fee. Need ${dockingFee}, have ${user.credits}`,
+      );
+    }
+
+    // Perform travel in transaction
+    return await this.userRepository.manager.transaction(
+      async (manager) => {
+        // Deduct docking fee from user credits
+        user.credits -= dockingFee;
+        await manager.getRepository(User).save(user);
+
+        // Update ship fuel
+        ship.fuelCurrent -= fuelRequired;
+        await manager.getRepository(Ship).save(ship);
+
+        // Update ship position
+        activeAssignment.currentPlanet = destinationPlanet;
+        await manager.getRepository(UserShip).save(activeAssignment);
+
+        // Create travel log
+        const travelLog = manager.getRepository(TravelLog).create({
+          ship,
+          originPlanet: currentPlanet,
+          destinationPlanet,
+          distance,
+          fuelUsed: fuelRequired,
+          travelTurn: 0, // TODO: Implement turn system
+        });
+
+        const savedTravelLog = await manager
+          .getRepository(TravelLog)
+          .save(travelLog);
+
+        // Reload user with updated relations
+        const updatedUser = await manager.getRepository(User).findOne({
+          where: { id: user.id },
+          relations: {
+            userShips: {
+              ship: true,
+              currentPlanet: true,
+            },
+          },
+        });
+
+        if (!updatedUser) {
+          throw new Error('Failed to reload user after travel');
+        }
+
+        // Build response
+        const travelLogDto: TravelLogDto = {
+          id: savedTravelLog.id,
+          distance: savedTravelLog.distance,
+          fuelUsed: savedTravelLog.fuelUsed,
+          travelTurn: savedTravelLog.travelTurn,
+          completedAt: savedTravelLog.completedAt,
+          originPlanetId: currentPlanet.id,
+          originPlanetName: currentPlanet.name,
+          destinationPlanetId: destinationPlanet.id,
+          destinationPlanetName: destinationPlanet.name,
+        };
+
+        const userDto = this.buildLoggedInUserDto(updatedUser);
+
+        return {
+          success: true,
+          message: `Successfully traveled from ${currentPlanet.name} to ${destinationPlanet.name}. Docking fee: ${dockingFee} credits.`,
+          travelLog: travelLogDto,
+          user: userDto,
+        };
+      },
+    );
+  }
+
+  private async verifySessionToken(
+    token: string,
+  ): Promise<SessionTokenPayload> {
+    try {
+      return await this.jwtService.verifyAsync<SessionTokenPayload>(token);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired session token');
+    }
+  }
+
+  private ensureSessionIsCurrent(
+    user: User,
+    payload: SessionTokenPayload,
+  ): void {
+    const tokenVersion = this.resolveTokenVersion(payload.ver);
+    if (this.resolveTokenVersion(user.sessionVersion) !== tokenVersion) {
+      throw new UnauthorizedException('Session is no longer valid');
+    }
+  }
+
+  private resolveTokenVersion(version: unknown): number {
+    return typeof version === 'number' &&
+      Number.isFinite(version) &&
+      version >= 0
+      ? Math.floor(version)
+      : 0;
+  }
+
+  private resolveActiveAssignment(user: User): UserShip | null {
+    const relations: unknown = user.userShips;
+    const assignments: UserShip[] = Array.isArray(relations)
+      ? (relations as UserShip[])
+      : [];
+    const activeAssignment = assignments.find(
+      (userShip) => userShip.isActive && userShip.ship,
+    );
+
+    return activeAssignment ?? null;
+  }
+
+  private buildLoggedInUserDto(user: User): LoggedInUserDto {
+    const activeAssignment = this.resolveActiveAssignment(user);
+    const activeShip = activeAssignment?.ship ?? null;
+    let ship: ShipSnapshotDto | null = null;
+
+    if (activeShip) {
+      const pricedShip = activeShip as Ship & {
+        level: number;
+        price: number;
+      };
+
+      const snapshot = {
+        id: pricedShip.id,
+        name: pricedShip.name,
+        level: pricedShip.level,
+        price: pricedShip.price,
+        cargoCapacity: pricedShip.cargoCapacity,
+        fuelCapacity: pricedShip.fuelCapacity,
+        fuelCurrent: pricedShip.fuelCurrent,
+        speed: pricedShip.speed,
+        acquiredAt: pricedShip.acquiredAt,
+      } satisfies ShipSnapshotDto;
+
+      ship = snapshot;
+    }
+
+    const fuelStats: FuelStatsDto = activeShip
+      ? {
+          current: activeShip.fuelCurrent,
+          capacity: activeShip.fuelCapacity,
+          percentage:
+            activeShip.fuelCapacity > 0
+              ? Math.round(
+                  (activeShip.fuelCurrent / activeShip.fuelCapacity) * 100,
+                )
+              : 0,
+        }
+      : {
+          current: null,
+          capacity: null,
+          percentage: null,
+        };
+
+    const stats: PlayerStatsDto = {
+      credits: user.credits,
+      reputation: user.reputation,
+      cargoCapacity: activeShip?.cargoCapacity ?? null,
+      fuel: fuelStats,
+    };
+
+    const planetCandidate: Planet | null = activeAssignment?.currentPlanet ?? null;
+    const position: ShipPositionDto | null = planetCandidate
+      ? {
+          planetId: planetCandidate.id,
+          planetName: planetCandidate.name,
+          hex:
+            typeof planetCandidate.hexQ === 'number' &&
+            typeof planetCandidate.hexR === 'number'
+              ? {
+                  q: planetCandidate.hexQ,
+                  r: planetCandidate.hexR,
+                }
+              : null,
+        }
+      : null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      rank: user.rank,
+      reputation: user.reputation,
+      credits: user.credits,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      ship,
+      stats,
+      position,
+    };
+  }
+}
+

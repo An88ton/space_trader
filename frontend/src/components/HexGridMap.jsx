@@ -6,6 +6,7 @@ import {
   generateUniverse,
   getPath,
 } from '../api/universe';
+import { travelToPlanet } from '../api/travel';
 import './HexGridMap.css';
 
 const HEX_SIZE = 25;
@@ -13,7 +14,7 @@ const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
 
-function HexGridMap({ playerPosition = null }) {
+function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSuccess = null }) {
   const [mapData, setMapData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +23,8 @@ function HexGridMap({ playerPosition = null }) {
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [path, setPath] = useState(null);
   const [pathStart, setPathStart] = useState(null);
+  const [isTraveling, setIsTraveling] = useState(false);
+  const [travelError, setTravelError] = useState(null);
 
   // Pan and zoom state
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -160,6 +163,44 @@ function HexGridMap({ playerPosition = null }) {
     [zoom],
   );
 
+  // Handle travel
+  const handleTravel = useCallback(async () => {
+    if (!selectedPlanet || !sessionToken || isTraveling) {
+      return;
+    }
+
+    // Check if already at this planet
+    if (playerPosition?.planetId === selectedPlanet.id) {
+      setTravelError('You are already at this planet');
+      return;
+    }
+
+    setIsTraveling(true);
+    setTravelError(null);
+
+    try {
+      const result = await travelToPlanet(sessionToken, selectedPlanet.id);
+      
+      // Call success callback if provided
+      if (onTravelSuccess) {
+        onTravelSuccess(result.user);
+      }
+
+      // Clear selection and reload map
+      setSelectedHex(null);
+      setSelectedPlanet(null);
+      setPath(null);
+      setPathStart(null);
+      
+      // Reload map to show updated position
+      await loadMap();
+    } catch (err) {
+      setTravelError(err.message || 'Travel failed');
+    } finally {
+      setIsTraveling(false);
+    }
+  }, [selectedPlanet, sessionToken, isTraveling, playerPosition, onTravelSuccess, loadMap]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -168,6 +209,7 @@ function HexGridMap({ playerPosition = null }) {
         setSelectedPlanet(null);
         setPath(null);
         setPathStart(null);
+        setTravelError(null);
       }
       if (e.key === '+' || e.key === '=') {
         setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP));
@@ -359,6 +401,33 @@ function HexGridMap({ playerPosition = null }) {
                   <small>Resources: {selectedPlanet.resources.join(', ')}</small>
                 </>
               )}
+              {playerPosition?.planetId !== selectedPlanet.id && sessionToken && (
+                <>
+                  <br />
+                  <br />
+                  <button
+                    onClick={handleTravel}
+                    disabled={isTraveling}
+                    style={{
+                      padding: '8px 16px',
+                      background: isTraveling ? '#666' : '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: isTraveling ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      width: '100%',
+                    }}
+                  >
+                    {isTraveling ? 'Traveling...' : 'Travel Here'}
+                  </button>
+                </>
+              )}
+              {travelError && (
+                <div style={{ marginTop: '8px', color: '#ff4444', fontSize: '12px' }}>
+                  {travelError}
+                </div>
+              )}
             </div>
           )}
           {path && path.length > 0 && (
@@ -372,6 +441,7 @@ function HexGridMap({ playerPosition = null }) {
               setSelectedPlanet(null);
               setPath(null);
               setPathStart(null);
+              setTravelError(null);
             }}
             className="hex-grid-map__close-button"
           >
