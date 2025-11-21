@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UniverseModule } from './universe/universe.module';
 import { TravelModule } from './travel/travel.module';
 import { MarketModule } from './market/market.module';
+import { EventModule } from './events/event.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MarketModule } from './market/market.module';
     UniverseModule,
     TravelModule,
     MarketModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],

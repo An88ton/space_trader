@@ -10,6 +10,7 @@ import { PlanetMarket } from '../entities/planet-market.entity';
 import { BuyGoodsDto } from './dto/buy-goods.dto';
 import { SellGoodsDto } from './dto/sell-goods.dto';
 import { LoggedInUserDto } from '../auth/dto/logged-in-user.dto';
+import { EventService } from '../events/event.service';
 type SessionTokenPayload = {
     sub: number;
     email: string;
@@ -25,7 +26,8 @@ export declare class MarketService {
     private readonly planetMarketRepository;
     private readonly jwtService;
     private readonly dataSource;
-    constructor(userRepository: Repository<User>, shipRepository: Repository<Ship>, planetRepository: Repository<Planet>, goodRepository: Repository<Good>, userShipRepository: Repository<UserShip>, inventoryRepository: Repository<PlayerInventory>, planetMarketRepository: Repository<PlanetMarket>, jwtService: JwtService, dataSource: DataSource);
+    private readonly eventService;
+    constructor(userRepository: Repository<User>, shipRepository: Repository<Ship>, planetRepository: Repository<Planet>, goodRepository: Repository<Good>, userShipRepository: Repository<UserShip>, inventoryRepository: Repository<PlayerInventory>, planetMarketRepository: Repository<PlanetMarket>, jwtService: JwtService, dataSource: DataSource, eventService: EventService);
     verifySessionToken(token: string): Promise<SessionTokenPayload>;
     buyGoods(token: string, buyGoodsDto: BuyGoodsDto): Promise<LoggedInUserDto>;
     sellGoods(token: string, sellGoodsDto: SellGoodsDto): Promise<LoggedInUserDto>;

@@ -19,6 +19,10 @@ let EventLog = class EventLog {
     event;
     occurredAt;
     reputationDelta;
+    creditDelta;
+    fuelDelta;
+    cargoLost;
+    eventData;
     notes;
 };
 exports.EventLog = EventLog;
@@ -53,6 +57,22 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'reputation_delta', type: 'int', nullable: true }),
     __metadata("design:type", Object)
 ], EventLog.prototype, "reputationDelta", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'credit_delta', type: 'int', nullable: true }),
+    __metadata("design:type", Object)
+], EventLog.prototype, "creditDelta", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'fuel_delta', type: 'int', nullable: true }),
+    __metadata("design:type", Object)
+], EventLog.prototype, "fuelDelta", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'cargo_lost', type: 'int', nullable: true }),
+    __metadata("design:type", Object)
+], EventLog.prototype, "cargoLost", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'jsonb', name: 'event_data', nullable: true }),
+    __metadata("design:type", Object)
+], EventLog.prototype, "eventData", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)

@@ -24,7 +24,9 @@ const good_entity_1 = require("../entities/good.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
 const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const planet_market_entity_1 = require("../entities/planet-market.entity");
+const reputation_log_entity_1 = require("../entities/reputation-log.entity");
 const market_logic_1 = require("../utils/market-logic");
+const event_service_1 = require("../events/event.service");
 let MarketService = class MarketService {
     userRepository;
     shipRepository;
@@ -35,7 +37,8 @@ let MarketService = class MarketService {
     planetMarketRepository;
     jwtService;
     dataSource;
-    constructor(userRepository, shipRepository, planetRepository, goodRepository, userShipRepository, inventoryRepository, planetMarketRepository, jwtService, dataSource) {
+    eventService;
+    constructor(userRepository, shipRepository, planetRepository, goodRepository, userShipRepository, inventoryRepository, planetMarketRepository, jwtService, dataSource, eventService) {
         this.userRepository = userRepository;
         this.shipRepository = shipRepository;
         this.planetRepository = planetRepository;
@@ -45,6 +48,7 @@ let MarketService = class MarketService {
         this.planetMarketRepository = planetMarketRepository;
         this.jwtService = jwtService;
         this.dataSource = dataSource;
+        this.eventService = eventService;
     }
     async verifySessionToken(token) {
         try {
@@ -113,7 +117,10 @@ let MarketService = class MarketService {
             marketEntry = (0, market_logic_1.createMarketEntry)(planet, good, true);
             marketEntry = await this.planetMarketRepository.save(marketEntry);
         }
-        const totalCost = marketEntry.price * buyGoodsDto.quantity;
+        const currentTurn = 0;
+        const priceModifier = await this.eventService.getMarketPriceModifier(planet.id, good.type, currentTurn);
+        const adjustedPrice = Math.round(marketEntry.price * priceModifier);
+        const totalCost = adjustedPrice * buyGoodsDto.quantity;
         if (user.credits < totalCost) {
             throw new common_1.BadRequestException('Insufficient credits');
         }
@@ -222,10 +229,26 @@ let MarketService = class MarketService {
             marketEntry = (0, market_logic_1.createMarketEntry)(planet, good, false);
             marketEntry = await this.planetMarketRepository.save(marketEntry);
         }
-        const totalCredits = marketEntry.price * sellGoodsDto.quantity;
+        const currentTurn = 0;
+        const priceModifier = await this.eventService.getMarketPriceModifier(planet.id, good.type, currentTurn);
+        const adjustedPrice = Math.round(marketEntry.price * priceModifier);
+        const totalCredits = adjustedPrice * sellGoodsDto.quantity;
         return await this.dataSource.transaction(async (manager) => {
             const userRepo = manager.getRepository(user_entity_1.User);
             const inventoryRepo = manager.getRepository(player_inventory_entity_1.PlayerInventory);
+            const reputationLogRepo = manager.getRepository(reputation_log_entity_1.ReputationLog);
+            const activeEvents = await this.eventService.getActiveMarketEvents(planet.id, currentTurn);
+            const hasSmugglingCrackdown = activeEvents.some((ae) => ae.event.eventCategory === 'smuggling_crackdown' &&
+                good.type === 'luxury');
+            if (hasSmugglingCrackdown) {
+                await userRepo.update({ id: user.id }, { reputation: Math.max(0, user.reputation - 20) });
+                const reputationLog = reputationLogRepo.create({
+                    user,
+                    delta: -20,
+                    reason: 'Smuggling crackdown: Caught selling contraband',
+                });
+                await reputationLogRepo.save(reputationLog);
+            }
             const inventory = await inventoryRepo.findOne({
                 where: {
                     ship: { id: ship.id },
@@ -413,6 +436,7 @@ exports.MarketService = MarketService = __decorate([
         typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService,
-        typeorm_2.DataSource])
+        typeorm_2.DataSource,
+        event_service_1.EventService])
 ], MarketService);
 //# sourceMappingURL=market.service.js.map

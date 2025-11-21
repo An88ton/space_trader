@@ -7,6 +7,7 @@ import { TravelLog } from '../entities/travel-log.entity';
 import { TravelRequestDto } from './dto/travel-request.dto';
 import { TravelResponseDto } from './dto/travel-response.dto';
 import { JwtService } from '@nestjs/jwt';
+import { EventService } from '../events/event.service';
 export declare class TravelService {
     private readonly userRepository;
     private readonly shipRepository;
@@ -14,7 +15,8 @@ export declare class TravelService {
     private readonly userShipRepository;
     private readonly travelLogRepository;
     private readonly jwtService;
-    constructor(userRepository: Repository<User>, shipRepository: Repository<Ship>, planetRepository: Repository<Planet>, userShipRepository: Repository<UserShip>, travelLogRepository: Repository<TravelLog>, jwtService: JwtService);
+    private readonly eventService;
+    constructor(userRepository: Repository<User>, shipRepository: Repository<Ship>, planetRepository: Repository<Planet>, userShipRepository: Repository<UserShip>, travelLogRepository: Repository<TravelLog>, jwtService: JwtService, eventService: EventService);
     travel(token: string, travelRequest: TravelRequestDto): Promise<TravelResponseDto>;
     private verifySessionToken;
     private ensureSessionIsCurrent;

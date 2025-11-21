@@ -21,8 +21,10 @@ const ship_entity_1 = require("../entities/ship.entity");
 const planet_entity_1 = require("../entities/planet.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
 const travel_log_entity_1 = require("../entities/travel-log.entity");
+const event_entity_1 = require("../entities/event.entity");
 const hex_coordinates_1 = require("../utils/hex-coordinates");
 const jwt_1 = require("@nestjs/jwt");
+const event_service_1 = require("../events/event.service");
 let TravelService = class TravelService {
     userRepository;
     shipRepository;
@@ -30,13 +32,15 @@ let TravelService = class TravelService {
     userShipRepository;
     travelLogRepository;
     jwtService;
-    constructor(userRepository, shipRepository, planetRepository, userShipRepository, travelLogRepository, jwtService) {
+    eventService;
+    constructor(userRepository, shipRepository, planetRepository, userShipRepository, travelLogRepository, jwtService, eventService) {
         this.userRepository = userRepository;
         this.shipRepository = shipRepository;
         this.planetRepository = planetRepository;
         this.userShipRepository = userShipRepository;
         this.travelLogRepository = travelLogRepository;
         this.jwtService = jwtService;
+        this.eventService = eventService;
     }
     async travel(token, travelRequest) {
         const payload = await this.verifySessionToken(token);
@@ -97,7 +101,12 @@ let TravelService = class TravelService {
         return await this.userRepository.manager.transaction(async (manager) => {
             user.credits -= dockingFee;
             await manager.getRepository(user_entity_1.User).save(user);
-            ship.fuelCurrent -= fuelRequired;
+            const travelTurn = 0;
+            const eventResult = await this.eventService.generateTravelEvent(user, ship, currentPlanet, destinationPlanet, travelTurn, manager);
+            const actualFuelUsed = eventResult.requiresChoice
+                ? fuelRequired
+                : Math.floor(fuelRequired * eventResult.fuelModifier);
+            ship.fuelCurrent = Math.max(0, ship.fuelCurrent - actualFuelUsed);
             await manager.getRepository(ship_entity_1.Ship).save(ship);
             activeAssignment.currentPlanet = destinationPlanet;
             await manager.getRepository(user_ship_entity_1.UserShip).save(activeAssignment);
@@ -106,12 +115,20 @@ let TravelService = class TravelService {
                 originPlanet: currentPlanet,
                 destinationPlanet,
                 distance,
-                fuelUsed: fuelRequired,
-                travelTurn: 0,
+                fuelUsed: actualFuelUsed,
+                travelTurn,
+                event: eventResult.event || undefined,
             });
             const savedTravelLog = await manager
                 .getRepository(travel_log_entity_1.TravelLog)
                 .save(travelLog);
+            if (!eventResult.requiresChoice) {
+                await this.eventService.logEvent(eventResult.event, user, savedTravelLog, eventResult, manager);
+                if (eventResult.creditsLost > 0) {
+                    user.credits -= eventResult.creditsLost;
+                    await manager.getRepository(user_entity_1.User).save(user);
+                }
+            }
             const updatedUser = await manager.getRepository(user_entity_1.User).findOne({
                 where: { id: user.id },
                 relations: {
@@ -136,11 +153,58 @@ let TravelService = class TravelService {
                 destinationPlanetName: destinationPlanet.name,
             };
             const userDto = this.buildLoggedInUserDto(updatedUser);
+            let eventMessage = '';
+            if (eventResult.event) {
+                eventMessage = ` ${eventResult.description}`;
+                if (eventResult.cargoLost > 0) {
+                    eventMessage += ` Lost ${eventResult.cargoLost} cargo.`;
+                }
+                if (eventResult.creditsLost > 0) {
+                    eventMessage += ` Lost ${eventResult.creditsLost} credits.`;
+                }
+                if (eventResult.reputationChange !== 0) {
+                    eventMessage += ` Reputation ${eventResult.reputationChange > 0 ? '+' : ''}${eventResult.reputationChange}.`;
+                }
+            }
+            let eventWithChoices = eventResult.event;
+            if (eventResult.requiresChoice && eventResult.event) {
+                eventWithChoices = await manager.getRepository(event_entity_1.Event).findOne({
+                    where: { id: eventResult.event.id },
+                    relations: ['choices'],
+                });
+            }
+            const eventResultDto = eventResult.event
+                ? {
+                    event: {
+                        id: eventResult.event.id,
+                        name: eventResult.event.name,
+                        description: eventResult.event.description || null,
+                        eventType: eventResult.event.eventType,
+                        eventCategory: eventResult.event.eventCategory,
+                        reputationChange: eventResult.event.reputationChange,
+                    },
+                    fuelModifier: eventResult.fuelModifier,
+                    cargoLost: eventResult.cargoLost,
+                    creditsLost: eventResult.creditsLost,
+                    reputationChange: eventResult.reputationChange,
+                    description: eventResult.description,
+                    requiresChoice: eventResult.requiresChoice || false,
+                    choices: eventWithChoices?.choices
+                        ?.sort((a, b) => a.sortOrder - b.sortOrder)
+                        .map((choice) => ({
+                        id: choice.id,
+                        label: choice.label,
+                        description: choice.description || null,
+                    })),
+                    travelLogId: savedTravelLog.id,
+                }
+                : null;
             return {
                 success: true,
-                message: `Successfully traveled from ${currentPlanet.name} to ${destinationPlanet.name}. Docking fee: ${dockingFee} credits.`,
+                message: `Successfully traveled from ${currentPlanet.name} to ${destinationPlanet.name}. Docking fee: ${dockingFee} credits.${eventMessage}`,
                 travelLog: travelLogDto,
                 user: userDto,
+                event: eventResultDto,
             };
         });
     }
@@ -253,6 +317,7 @@ exports.TravelService = TravelService = __decorate([
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        event_service_1.EventService])
 ], TravelService);
 //# sourceMappingURL=travel.service.js.map

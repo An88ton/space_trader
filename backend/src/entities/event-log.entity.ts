@@ -39,6 +39,18 @@ export class EventLog {
   @Column({ name: 'reputation_delta', type: 'int', nullable: true })
   reputationDelta?: number | null;
 
+  @Column({ name: 'credit_delta', type: 'int', nullable: true })
+  creditDelta?: number | null;
+
+  @Column({ name: 'fuel_delta', type: 'int', nullable: true })
+  fuelDelta?: number | null;
+
+  @Column({ name: 'cargo_lost', type: 'int', nullable: true })
+  cargoLost?: number | null;
+
+  @Column({ type: 'jsonb', name: 'event_data', nullable: true })
+  eventData?: Record<string, any> | null;
+
   @Column({ type: 'text', nullable: true })
   notes?: string | null;
 }

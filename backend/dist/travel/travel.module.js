@@ -17,6 +17,7 @@ const user_ship_entity_1 = require("../entities/user-ship.entity");
 const travel_log_entity_1 = require("../entities/travel-log.entity");
 const travel_controller_1 = require("./travel.controller");
 const travel_service_1 = require("./travel.service");
+const event_module_1 = require("../events/event.module");
 let TravelModule = class TravelModule {
 };
 exports.TravelModule = TravelModule;
@@ -27,6 +28,7 @@ exports.TravelModule = TravelModule = __decorate([
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET ?? 'space-trader-super-secret',
             }),
+            event_module_1.EventModule,
         ],
         controllers: [travel_controller_1.TravelController],
         providers: [travel_service_1.TravelService],

@@ -14,6 +14,7 @@ import { Good } from '../entities/good.entity';
 import { UserShip } from '../entities/user-ship.entity';
 import { PlayerInventory } from '../entities/player-inventory.entity';
 import { PlanetMarket } from '../entities/planet-market.entity';
+import { ReputationLog } from '../entities/reputation-log.entity';
 import { BuyGoodsDto } from './dto/buy-goods.dto';
 import { SellGoodsDto } from './dto/sell-goods.dto';
 import { LoggedInUserDto } from '../auth/dto/logged-in-user.dto';
@@ -29,6 +30,7 @@ import {
   calculateMarketPrice,
   createMarketEntry,
 } from '../utils/market-logic';
+import { EventService } from '../events/event.service';
 
 type SessionTokenPayload = {
   sub: number;
@@ -55,6 +57,7 @@ export class MarketService {
     private readonly planetMarketRepository: Repository<PlanetMarket>,
     private readonly jwtService: JwtService,
     private readonly dataSource: DataSource,
+    private readonly eventService: EventService,
   ) {}
 
   async verifySessionToken(token: string): Promise<SessionTokenPayload> {
@@ -156,8 +159,17 @@ export class MarketService {
       marketEntry = await this.planetMarketRepository.save(marketEntry);
     }
 
+    // Apply market event modifiers
+    const currentTurn = 0; // TODO: Implement turn system
+    const priceModifier = await this.eventService.getMarketPriceModifier(
+      planet.id,
+      good.type,
+      currentTurn,
+    );
+    const adjustedPrice = Math.round(marketEntry.price * priceModifier);
+
     // Calculate total cost
-    const totalCost = marketEntry.price * buyGoodsDto.quantity;
+    const totalCost = adjustedPrice * buyGoodsDto.quantity;
 
     // Check if user has enough credits
     if (user.credits < totalCost) {
@@ -320,13 +332,52 @@ export class MarketService {
       marketEntry = await this.planetMarketRepository.save(marketEntry);
     }
 
-    // Calculate total credits earned (using market price)
-    const totalCredits = marketEntry.price * sellGoodsDto.quantity;
+    // Apply market event modifiers
+    const currentTurn = 0; // TODO: Implement turn system
+    const priceModifier = await this.eventService.getMarketPriceModifier(
+      planet.id,
+      good.type,
+      currentTurn,
+    );
+    const adjustedPrice = Math.round(marketEntry.price * priceModifier);
+
+    // Calculate total credits earned (using adjusted market price)
+    const totalCredits = adjustedPrice * sellGoodsDto.quantity;
 
     // Perform the transaction
     return await this.dataSource.transaction(async (manager) => {
       const userRepo = manager.getRepository(User);
       const inventoryRepo = manager.getRepository(PlayerInventory);
+      const reputationLogRepo = manager.getRepository(ReputationLog);
+
+      // Check for smuggling crackdown event (inside transaction)
+      const activeEvents = await this.eventService.getActiveMarketEvents(
+        planet.id,
+        currentTurn,
+      );
+      
+      // Check if there's a smuggling crackdown and good is contraband
+      const hasSmugglingCrackdown = activeEvents.some(
+        (ae) =>
+          ae.event.eventCategory === 'smuggling_crackdown' &&
+          good.type === 'luxury', // Assuming luxury goods are contraband
+      );
+
+      if (hasSmugglingCrackdown) {
+        // Apply negative reputation for selling contraband during crackdown
+        await userRepo.update(
+          { id: user.id },
+          { reputation: Math.max(0, user.reputation - 20) },
+        );
+        
+        // Log reputation change
+        const reputationLog = reputationLogRepo.create({
+          user,
+          delta: -20,
+          reason: 'Smuggling crackdown: Caught selling contraband',
+        });
+        await reputationLogRepo.save(reputationLog);
+      }
 
       // Find player inventory entry inside transaction to avoid race conditions
       const inventory = await inventoryRepo.findOne({

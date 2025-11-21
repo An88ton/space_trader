@@ -65,6 +65,17 @@
   font-size: 13px;
 }
 
+.planet-market__events {
+  margin-bottom: 16px;
+}
+
+.planet-market__events .active-events-bar {
+  position: relative;
+  top: 0;
+  left: 0;
+  max-width: 100%;
+}
+
 .planet-market__section {
   margin-bottom: 24px;
 }

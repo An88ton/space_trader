@@ -14,6 +14,8 @@ const player_inventory_entity_1 = require("../entities/player-inventory.entity")
 const event_entity_1 = require("../entities/event.entity");
 const event_market_effect_entity_1 = require("../entities/event-market-effect.entity");
 const event_log_entity_1 = require("../entities/event-log.entity");
+const active_event_entity_1 = require("../entities/active-event.entity");
+const event_choice_entity_1 = require("../entities/event-choice.entity");
 const travel_log_entity_1 = require("../entities/travel-log.entity");
 const reputation_log_entity_1 = require("../entities/reputation-log.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
@@ -27,6 +29,10 @@ const _1732560000000_AddShipPositionTracking_1 = require("../migrations/17325600
 const _1763723248333_AddGoodType_1 = require("../migrations/1763723248333-AddGoodType");
 const _1763723302921_AddMarketSellingFlag_1 = require("../migrations/1763723302921-AddMarketSellingFlag");
 const _1763724000000_AddFiftyGoods_1 = require("../migrations/1763724000000-AddFiftyGoods");
+const _1733000000000_EnhanceEventSystem_1 = require("../migrations/1733000000000-EnhanceEventSystem");
+const _1733000001000_SeedEvents_1 = require("../migrations/1733000001000-SeedEvents");
+const _1733000002000_AddEventChoices_1 = require("../migrations/1733000002000-AddEventChoices");
+const _1733000003000_RebalanceEventProbabilities_1 = require("../migrations/1733000003000-RebalanceEventProbabilities");
 exports.dataSourceOptions = {
     type: 'postgres',
     host: process.env.DB_HOST ?? 'localhost',
@@ -46,6 +52,8 @@ exports.dataSourceOptions = {
         event_entity_1.Event,
         event_market_effect_entity_1.EventMarketEffect,
         event_log_entity_1.EventLog,
+        active_event_entity_1.ActiveEvent,
+        event_choice_entity_1.EventChoice,
         travel_log_entity_1.TravelLog,
         reputation_log_entity_1.ReputationLog,
         user_ship_entity_1.UserShip,
@@ -63,6 +71,10 @@ exports.dataSourceOptions = {
         _1763723248333_AddGoodType_1.AddGoodType1763723248333,
         _1763723302921_AddMarketSellingFlag_1.AddMarketSellingFlag1763723302921,
         _1763724000000_AddFiftyGoods_1.AddFiftyGoods1763724000000,
+        _1733000000000_EnhanceEventSystem_1.EnhanceEventSystem1733000000000,
+        _1733000001000_SeedEvents_1.SeedEvents1733000001000,
+        _1733000002000_AddEventChoices_1.AddEventChoices1733000002000,
+        _1733000003000_RebalanceEventProbabilities_1.RebalanceEventProbabilities1733000003000,
     ],
 };
 const dataSource = new typeorm_1.DataSource(exports.dataSourceOptions);

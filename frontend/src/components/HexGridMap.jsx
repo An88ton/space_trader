@@ -8,6 +8,8 @@ import {
 } from '../api/universe';
 import { travelToPlanet } from '../api/travel';
 import PlanetMarket from './PlanetMarket';
+import EventDisplay from './EventDisplay';
+import ActiveEventsBar from './ActiveEventsBar';
 import './HexGridMap.css';
 
 const HEX_SIZE = 25;
@@ -27,6 +29,7 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
   const [isTraveling, setIsTraveling] = useState(false);
   const [travelError, setTravelError] = useState(null);
   const [showMarket, setShowMarket] = useState(false);
+  const [travelEvent, setTravelEvent] = useState(null);
 
   // Pan and zoom state
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -182,6 +185,22 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
 
     try {
       const result = await travelToPlanet(sessionToken, selectedPlanet.id);
+      
+      // Show event if one occurred
+      if (result.event) {
+        setTravelEvent({
+          ...result.event.event,
+          fuelModifier: result.event.fuelModifier,
+          cargoLost: result.event.cargoLost,
+          creditsLost: result.event.creditsLost,
+          reputationChange: result.event.reputationChange,
+          description: result.event.description,
+          requiresChoice: result.event.requiresChoice || false,
+          choices: result.event.choices || [],
+          travelLogId: result.event.travelLogId || null,
+        });
+        // Event window stays open until manually closed
+      }
       
       // Call success callback if provided
       if (onTravelSuccess) {
@@ -507,6 +526,28 @@ function HexGridMap({ playerPosition = null, sessionToken = null, onTravelSucces
           Scroll to zoom • Press ESC to clear • Gold hex = your ship
         </small>
       </div>
+
+      {/* Active Events Bar */}
+      <ActiveEventsBar
+        sessionToken={sessionToken}
+        planetId={selectedPlanet?.id || playerPosition?.planetId || null}
+        turn={0}
+      />
+
+      {/* Event Display */}
+      <EventDisplay
+        event={travelEvent}
+        onClose={() => setTravelEvent(null)}
+        sessionToken={sessionToken}
+        travelLogId={travelEvent?.travelLogId || null}
+        onChoiceSubmitted={(updatedEvent, updatedUser) => {
+          setTravelEvent(updatedEvent);
+          // Update user state if provided
+          if (onTravelSuccess && updatedUser) {
+            onTravelSuccess(updatedUser);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -8,8 +8,10 @@ import { Good } from '../entities/good.entity';
 import { UserShip } from '../entities/user-ship.entity';
 import { PlayerInventory } from '../entities/player-inventory.entity';
 import { PlanetMarket } from '../entities/planet-market.entity';
+import { ReputationLog } from '../entities/reputation-log.entity';
 import { MarketController } from './market.controller';
 import { MarketService } from './market.service';
+import { EventModule } from '../events/event.module';
 
 @Module({
   imports: [
@@ -21,10 +23,12 @@ import { MarketService } from './market.service';
       UserShip,
       PlayerInventory,
       PlanetMarket,
+      ReputationLog,
     ]),
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'space-trader-super-secret',
     }),
+    EventModule,
   ],
   controllers: [MarketController],
   providers: [MarketService],

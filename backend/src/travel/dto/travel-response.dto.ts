@@ -12,10 +12,36 @@ export class TravelLogDto {
   destinationPlanetName: string;
 }
 
+export class TravelEventDto {
+  id: number;
+  name: string;
+  description: string | null;
+  eventType: string;
+  eventCategory: string;
+  reputationChange: number;
+}
+
+export class TravelEventResultDto {
+  event: TravelEventDto | null;
+  fuelModifier: number;
+  cargoLost: number;
+  creditsLost: number;
+  reputationChange: number;
+  description: string;
+  requiresChoice?: boolean;
+  choices?: Array<{
+    id: number;
+    label: string;
+    description: string | null;
+  }>;
+  travelLogId?: number;
+}
+
 export class TravelResponseDto {
   success: boolean;
   message: string;
   travelLog: TravelLogDto;
   user: LoggedInUserDto;
+  event?: TravelEventResultDto | null;
 }
 

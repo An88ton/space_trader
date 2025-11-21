@@ -11,6 +11,8 @@ import { PlayerInventory } from '../entities/player-inventory.entity';
 import { Event } from '../entities/event.entity';
 import { EventMarketEffect } from '../entities/event-market-effect.entity';
 import { EventLog } from '../entities/event-log.entity';
+import { ActiveEvent } from '../entities/active-event.entity';
+import { EventChoice } from '../entities/event-choice.entity';
 import { TravelLog } from '../entities/travel-log.entity';
 import { ReputationLog } from '../entities/reputation-log.entity';
 import { UserShip } from '../entities/user-ship.entity';
@@ -24,6 +26,10 @@ import { AddShipPositionTracking1732560000000 } from '../migrations/173256000000
 import { AddGoodType1763723248333 } from '../migrations/1763723248333-AddGoodType';
 import { AddMarketSellingFlag1763723302921 } from '../migrations/1763723302921-AddMarketSellingFlag';
 import { AddFiftyGoods1763724000000 } from '../migrations/1763724000000-AddFiftyGoods';
+import { EnhanceEventSystem1733000000000 } from '../migrations/1733000000000-EnhanceEventSystem';
+import { SeedEvents1733000001000 } from '../migrations/1733000001000-SeedEvents';
+import { AddEventChoices1733000002000 } from '../migrations/1733000002000-AddEventChoices';
+import { RebalanceEventProbabilities1733000003000 } from '../migrations/1733000003000-RebalanceEventProbabilities';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
@@ -44,6 +50,8 @@ export const dataSourceOptions: DataSourceOptions = {
     Event,
     EventMarketEffect,
     EventLog,
+    ActiveEvent,
+    EventChoice,
     TravelLog,
     ReputationLog,
     UserShip,
@@ -61,6 +69,10 @@ export const dataSourceOptions: DataSourceOptions = {
     AddGoodType1763723248333,
     AddMarketSellingFlag1763723302921,
     AddFiftyGoods1763724000000,
+    EnhanceEventSystem1733000000000,
+    SeedEvents1733000001000,
+    AddEventChoices1733000002000,
+    RebalanceEventProbabilities1733000003000,
   ],
 };
 

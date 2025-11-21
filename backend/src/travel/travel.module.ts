@@ -8,6 +8,7 @@ import { UserShip } from '../entities/user-ship.entity';
 import { TravelLog } from '../entities/travel-log.entity';
 import { TravelController } from './travel.controller';
 import { TravelService } from './travel.service';
+import { EventModule } from '../events/event.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TravelService } from './travel.service';
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'space-trader-super-secret',
     }),
+    EventModule,
   ],
   controllers: [TravelController],
   providers: [TravelService],

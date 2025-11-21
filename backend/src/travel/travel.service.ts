@@ -11,8 +11,9 @@ import { Ship } from '../entities/ship.entity';
 import { Planet } from '../entities/planet.entity';
 import { UserShip } from '../entities/user-ship.entity';
 import { TravelLog } from '../entities/travel-log.entity';
+import { Event } from '../entities/event.entity';
 import { TravelRequestDto } from './dto/travel-request.dto';
-import { TravelResponseDto, TravelLogDto } from './dto/travel-response.dto';
+import { TravelResponseDto, TravelLogDto, TravelEventResultDto, TravelEventDto } from './dto/travel-response.dto';
 import { hexDistance, HexCoordinate } from '../utils/hex-coordinates';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -22,6 +23,7 @@ import {
   PlayerStatsDto,
   ShipPositionDto,
 } from '../auth/dto/logged-in-user.dto';
+import { EventService } from '../events/event.service';
 
 type SessionTokenPayload = {
   sub: number;
@@ -43,6 +45,7 @@ export class TravelService {
     @InjectRepository(TravelLog)
     private readonly travelLogRepository: Repository<TravelLog>,
     private readonly jwtService: JwtService,
+    private readonly eventService: EventService,
   ) {}
 
   async travel(
@@ -140,8 +143,23 @@ export class TravelService {
         user.credits -= dockingFee;
         await manager.getRepository(User).save(user);
 
-        // Update ship fuel
-        ship.fuelCurrent -= fuelRequired;
+        // Generate travel event (deterministic)
+        const travelTurn = 0; // TODO: Implement turn system
+        const eventResult = await this.eventService.generateTravelEvent(
+          user,
+          ship,
+          currentPlanet,
+          destinationPlanet,
+          travelTurn,
+          manager,
+        );
+
+        // Apply fuel modifier from event (only if event doesn't require a choice)
+        // If it requires a choice, fuel will be applied when choice is submitted
+        const actualFuelUsed = eventResult.requiresChoice
+          ? fuelRequired
+          : Math.floor(fuelRequired * eventResult.fuelModifier);
+        ship.fuelCurrent = Math.max(0, ship.fuelCurrent - actualFuelUsed);
         await manager.getRepository(Ship).save(ship);
 
         // Update ship position
@@ -154,13 +172,32 @@ export class TravelService {
           originPlanet: currentPlanet,
           destinationPlanet,
           distance,
-          fuelUsed: fuelRequired,
-          travelTurn: 0, // TODO: Implement turn system
+          fuelUsed: actualFuelUsed,
+          travelTurn,
+          event: eventResult.event || undefined,
         });
 
         const savedTravelLog = await manager
           .getRepository(TravelLog)
           .save(travelLog);
+
+        // Log event occurrence (only if it doesn't require a choice)
+        // Choices will be logged when the choice is submitted
+        if (!eventResult.requiresChoice) {
+          await this.eventService.logEvent(
+            eventResult.event,
+            user,
+            savedTravelLog,
+            eventResult,
+            manager,
+          );
+
+          // Update user credits if event caused credit loss
+          if (eventResult.creditsLost > 0) {
+            user.credits -= eventResult.creditsLost;
+            await manager.getRepository(User).save(user);
+          }
+        }
 
         // Reload user with updated relations
         const updatedUser = await manager.getRepository(User).findOne({
@@ -192,11 +229,64 @@ export class TravelService {
 
         const userDto = this.buildLoggedInUserDto(updatedUser);
 
+        // Build event message
+        let eventMessage = '';
+        if (eventResult.event) {
+          eventMessage = ` ${eventResult.description}`;
+          if (eventResult.cargoLost > 0) {
+            eventMessage += ` Lost ${eventResult.cargoLost} cargo.`;
+          }
+          if (eventResult.creditsLost > 0) {
+            eventMessage += ` Lost ${eventResult.creditsLost} credits.`;
+          }
+          if (eventResult.reputationChange !== 0) {
+            eventMessage += ` Reputation ${eventResult.reputationChange > 0 ? '+' : ''}${eventResult.reputationChange}.`;
+          }
+        }
+
+        // Load event with choices if it requires a choice
+        let eventWithChoices = eventResult.event;
+        if (eventResult.requiresChoice && eventResult.event) {
+          eventWithChoices = await manager.getRepository(Event).findOne({
+            where: { id: eventResult.event.id },
+            relations: ['choices'],
+          });
+        }
+
+        // Build event result DTO
+        const eventResultDto: TravelEventResultDto | null = eventResult.event
+          ? {
+              event: {
+                id: eventResult.event.id,
+                name: eventResult.event.name,
+                description: eventResult.event.description || null,
+                eventType: eventResult.event.eventType,
+                eventCategory: eventResult.event.eventCategory,
+                reputationChange: eventResult.event.reputationChange,
+              },
+              fuelModifier: eventResult.fuelModifier,
+              cargoLost: eventResult.cargoLost,
+              creditsLost: eventResult.creditsLost,
+              reputationChange: eventResult.reputationChange,
+              description: eventResult.description,
+              requiresChoice: eventResult.requiresChoice || false,
+              choices: eventWithChoices?.choices
+                ?.sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((choice) => ({
+                  id: choice.id,
+                  label: choice.label,
+                  description: choice.description || null,
+                })),
+              travelLogId: savedTravelLog.id,
+            }
+          : null;
+
         return {
           success: true,
-          message: `Successfully traveled from ${currentPlanet.name} to ${destinationPlanet.name}. Docking fee: ${dockingFee} credits.`,
+          message: `Successfully traveled from ${currentPlanet.name} to ${destinationPlanet.name}. Docking fee: ${dockingFee} credits.${eventMessage}`,
           travelLog: travelLogDto,
           user: userDto,
+          event: eventResultDto,
         };
       },
     );

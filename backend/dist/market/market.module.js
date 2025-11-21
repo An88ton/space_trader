@@ -17,8 +17,10 @@ const good_entity_1 = require("../entities/good.entity");
 const user_ship_entity_1 = require("../entities/user-ship.entity");
 const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const planet_market_entity_1 = require("../entities/planet-market.entity");
+const reputation_log_entity_1 = require("../entities/reputation-log.entity");
 const market_controller_1 = require("./market.controller");
 const market_service_1 = require("./market.service");
+const event_module_1 = require("../events/event.module");
 let MarketModule = class MarketModule {
 };
 exports.MarketModule = MarketModule;
@@ -33,10 +35,12 @@ exports.MarketModule = MarketModule = __decorate([
                 user_ship_entity_1.UserShip,
                 player_inventory_entity_1.PlayerInventory,
                 planet_market_entity_1.PlanetMarket,
+                reputation_log_entity_1.ReputationLog,
             ]),
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET ?? 'space-trader-super-secret',
             }),
+            event_module_1.EventModule,
         ],
         controllers: [market_controller_1.MarketController],
         providers: [market_service_1.MarketService],

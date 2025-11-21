@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getPlanetMarket } from '../api/universe';
 import { buyGoods, sellGoods, getInventory } from '../api/market';
+import ActiveEventsBar from './ActiveEventsBar';
 import './PlanetMarket.css';
 
 function PlanetMarket({ planetQ, planetR, planetName, planetId, sessionToken, playerPosition, onBuySuccess, onSellSuccess }) {
@@ -201,6 +202,17 @@ function PlanetMarket({ planetQ, planetR, planetName, planetId, sessionToken, pl
   return (
     <div className="planet-market">
       <h3 className="planet-market__title">Market Prices - {planetName}</h3>
+      
+      {/* Active Events for this planet */}
+      {sessionToken && (
+        <div className="planet-market__events">
+          <ActiveEventsBar
+            sessionToken={sessionToken}
+            planetId={planetId}
+            turn={0}
+          />
+        </div>
+      )}
       
       {!isAtPlanet && (
         <div className="planet-market__warning">
