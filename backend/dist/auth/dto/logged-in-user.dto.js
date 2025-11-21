@@ -28,6 +28,7 @@ exports.CargoItemDto = CargoItemDto;
 class PlayerStatsDto {
     credits;
     reputation;
+    rank;
     cargoCapacity;
     cargoUsed;
     cargoItems;

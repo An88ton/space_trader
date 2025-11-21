@@ -24,6 +24,7 @@ const travel_log_entity_1 = require("../entities/travel-log.entity");
 const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const event_entity_1 = require("../entities/event.entity");
 const hex_coordinates_1 = require("../utils/hex-coordinates");
+const rank_utils_1 = require("../utils/rank-utils");
 const jwt_1 = require("@nestjs/jwt");
 const event_service_1 = require("../events/event.service");
 let TravelService = class TravelService {
@@ -97,7 +98,9 @@ let TravelService = class TravelService {
         if (ship.fuelCurrent < fuelRequired) {
             throw new common_1.BadRequestException(`Insufficient fuel. Need ${fuelRequired}, have ${ship.fuelCurrent}`);
         }
-        const dockingFee = destinationPlanet.dockingFee;
+        const baseDockingFee = destinationPlanet.dockingFee;
+        const discountMultiplier = (0, rank_utils_1.getDockingFeeMultiplier)(user.rank);
+        const dockingFee = Math.floor(baseDockingFee * discountMultiplier);
         if (user.credits < dockingFee) {
             throw new common_1.BadRequestException(`Insufficient credits for docking fee. Need ${dockingFee}, have ${user.credits}`);
         }
@@ -303,6 +306,7 @@ let TravelService = class TravelService {
         const stats = {
             credits: user.credits,
             reputation: user.reputation,
+            rank: user.rank,
             cargoCapacity: activeShip?.cargoCapacity ?? null,
             cargoUsed,
             cargoItems,

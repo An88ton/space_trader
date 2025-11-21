@@ -233,6 +233,7 @@ let AuthService = class AuthService {
         const stats = {
             credits: user.credits,
             reputation: user.reputation,
+            rank: user.rank,
             cargoCapacity: activeShip?.cargoCapacity ?? null,
             cargoUsed,
             cargoItems,

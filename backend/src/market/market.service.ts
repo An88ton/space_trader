@@ -25,6 +25,7 @@ import {
   PlayerStatsDto,
   ShipPositionDto,
 } from '../auth/dto/logged-in-user.dto';
+import { calculateRank } from '../utils/rank-utils';
 import {
   shouldPlanetSellGood,
   shouldPlanetBuyGood,
@@ -366,10 +367,16 @@ export class MarketService {
 
       if (hasSmugglingCrackdown) {
         // Apply negative reputation for selling contraband during crackdown
+        const newReputation = Math.max(0, user.reputation - 20);
+        const newRank = calculateRank(newReputation);
         await userRepo.update(
           { id: user.id },
-          { reputation: Math.max(0, user.reputation - 20) },
+          { reputation: newReputation, rank: newRank },
         );
+        
+        // Update user object for consistency
+        user.reputation = newReputation;
+        user.rank = newRank;
         
         // Log reputation change
         const reputationLog = reputationLogRepo.create({
@@ -633,6 +640,7 @@ export class MarketService {
     const stats: PlayerStatsDto = {
       credits: user.credits,
       reputation: user.reputation,
+      rank: user.rank,
       cargoCapacity: activeShip?.cargoCapacity ?? null,
       cargoUsed,
       cargoItems,

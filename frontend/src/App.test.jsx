@@ -141,6 +141,7 @@ describe('Login flow', () => {
           stats: {
             credits: 75000,
             reputation: 1200,
+            rank: 'Commander',
             cargoCapacity: 120,
             fuel: {
               current: 65,
@@ -185,6 +186,7 @@ describe('Login flow', () => {
     expect(statsRegion).toHaveTextContent(/\(81%/i)
     expect(statsRegion).toHaveTextContent(/120 units/i)
     expect(statsRegion).toHaveTextContent(/1,200/i)
+    expect(statsRegion).toHaveTextContent(/Commander/i)
     expect(statsRegion).toHaveTextContent(/Nexus Station/i)
   })
 
@@ -268,6 +270,7 @@ describe('Logout flow', () => {
             stats: {
               credits: 5000,
               reputation: 900,
+              rank: 'Commander',
               cargoCapacity: null,
               fuel: {
                 current: null,

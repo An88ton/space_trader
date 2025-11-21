@@ -13,6 +13,7 @@ import { TravelLog } from '../entities/travel-log.entity';
 import { EventMarketEffect } from '../entities/event-market-effect.entity';
 import { EventChoice } from '../entities/event-choice.entity';
 import { Good } from '../entities/good.entity';
+import { calculateRank } from '../utils/rank-utils';
 
 export interface TravelEventResult {
   event: Event | null;
@@ -808,6 +809,8 @@ export class EventService {
     const reputationLogRepo = manager.getRepository(ReputationLog);
 
     user.reputation += delta;
+    // Update rank based on new reputation
+    user.rank = calculateRank(user.reputation);
     await userRepo.save(user);
 
     const reputationLog = reputationLogRepo.create({

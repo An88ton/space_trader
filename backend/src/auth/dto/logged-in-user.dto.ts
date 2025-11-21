@@ -25,6 +25,7 @@ export class CargoItemDto {
 export class PlayerStatsDto {
   credits: number;
   reputation: number;
+  rank: string;
   cargoCapacity: number | null;
   cargoUsed: number;
   cargoItems: CargoItemDto[];

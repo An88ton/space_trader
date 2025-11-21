@@ -25,6 +25,7 @@ const user_ship_entity_1 = require("../entities/user-ship.entity");
 const player_inventory_entity_1 = require("../entities/player-inventory.entity");
 const planet_market_entity_1 = require("../entities/planet-market.entity");
 const reputation_log_entity_1 = require("../entities/reputation-log.entity");
+const rank_utils_1 = require("../utils/rank-utils");
 const market_logic_1 = require("../utils/market-logic");
 const event_service_1 = require("../events/event.service");
 let MarketService = class MarketService {
@@ -241,7 +242,11 @@ let MarketService = class MarketService {
             const hasSmugglingCrackdown = activeEvents.some((ae) => ae.event.eventCategory === 'smuggling_crackdown' &&
                 good.type === 'luxury');
             if (hasSmugglingCrackdown) {
-                await userRepo.update({ id: user.id }, { reputation: Math.max(0, user.reputation - 20) });
+                const newReputation = Math.max(0, user.reputation - 20);
+                const newRank = (0, rank_utils_1.calculateRank)(newReputation);
+                await userRepo.update({ id: user.id }, { reputation: newReputation, rank: newRank });
+                user.reputation = newReputation;
+                user.rank = newRank;
                 const reputationLog = reputationLogRepo.create({
                     user,
                     delta: -20,
@@ -424,6 +429,7 @@ let MarketService = class MarketService {
         const stats = {
             credits: user.credits,
             reputation: user.reputation,
+            rank: user.rank,
             cargoCapacity: activeShip?.cargoCapacity ?? null,
             cargoUsed,
             cargoItems,

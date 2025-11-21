@@ -239,6 +239,7 @@ export class EventController {
       stats: {
         credits: updatedUser.credits,
         reputation: updatedUser.reputation,
+        rank: updatedUser.rank,
         cargoCapacity: activeShip?.cargoCapacity ?? null,
         cargoUsed,
         cargoItems,

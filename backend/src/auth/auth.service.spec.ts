@@ -197,7 +197,10 @@ describe('AuthService', () => {
       stats: {
         credits: user.credits,
         reputation: user.reputation,
+        rank: user.rank,
         cargoCapacity: null,
+        cargoUsed: 0,
+        cargoItems: [],
         fuel: {
           current: null,
           capacity: null,

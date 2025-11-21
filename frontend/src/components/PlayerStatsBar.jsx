@@ -64,7 +64,7 @@ const PlayerStatsBar = ({ user, onLogout, isLoggingOut }) => {
           </p>
         </div>
         <div className="player-stats-bar__actions">
-          <p className="player-stats-bar__rank">{user.rank}</p>
+          <p className="player-stats-bar__rank">{stats.rank}</p>
           {onLogout ? (
             <button
               type="button"
@@ -98,6 +98,10 @@ const PlayerStatsBar = ({ user, onLogout, isLoggingOut }) => {
         <div>
           <dt>Reputation</dt>
           <dd>{formatNumber(stats.reputation)}</dd>
+        </div>
+        <div>
+          <dt>Rank</dt>
+          <dd>{stats.rank}</dd>
         </div>
         <div>
           <dt>Location</dt>

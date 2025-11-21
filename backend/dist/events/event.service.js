@@ -26,6 +26,7 @@ const reputation_log_entity_1 = require("../entities/reputation-log.entity");
 const travel_log_entity_1 = require("../entities/travel-log.entity");
 const event_choice_entity_1 = require("../entities/event-choice.entity");
 const good_entity_1 = require("../entities/good.entity");
+const rank_utils_1 = require("../utils/rank-utils");
 let EventService = class EventService {
     eventRepository;
     eventLogRepository;
@@ -551,6 +552,7 @@ let EventService = class EventService {
         const userRepo = manager.getRepository(user_entity_1.User);
         const reputationLogRepo = manager.getRepository(reputation_log_entity_1.ReputationLog);
         user.reputation += delta;
+        user.rank = (0, rank_utils_1.calculateRank)(user.reputation);
         await userRepo.save(user);
         const reputationLog = reputationLogRepo.create({
             user,

@@ -16,6 +16,7 @@ import { Event } from '../entities/event.entity';
 import { TravelRequestDto } from './dto/travel-request.dto';
 import { TravelResponseDto, TravelLogDto, TravelEventResultDto, TravelEventDto } from './dto/travel-response.dto';
 import { hexDistance, HexCoordinate } from '../utils/hex-coordinates';
+import { getDockingFeeMultiplier } from '../utils/rank-utils';
 import { JwtService } from '@nestjs/jwt';
 import {
   CargoItemDto,
@@ -132,8 +133,11 @@ export class TravelService {
       );
     }
 
-    // Check if user has enough credits for docking fee
-    const dockingFee = destinationPlanet.dockingFee;
+    // Calculate docking fee with rank-based discount
+    const baseDockingFee = destinationPlanet.dockingFee;
+    const discountMultiplier = getDockingFeeMultiplier(user.rank);
+    const dockingFee = Math.floor(baseDockingFee * discountMultiplier);
+    
     if (user.credits < dockingFee) {
       throw new BadRequestException(
         `Insufficient credits for docking fee. Need ${dockingFee}, have ${user.credits}`,
@@ -419,6 +423,7 @@ export class TravelService {
     const stats: PlayerStatsDto = {
       credits: user.credits,
       reputation: user.reputation,
+      rank: user.rank,
       cargoCapacity: activeShip?.cargoCapacity ?? null,
       cargoUsed,
       cargoItems,

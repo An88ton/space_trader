@@ -276,6 +276,7 @@ export class AuthService {
     const stats: PlayerStatsDto = {
       credits: user.credits,
       reputation: user.reputation,
+      rank: user.rank,
       cargoCapacity: activeShip?.cargoCapacity ?? null,
       cargoUsed,
       cargoItems,

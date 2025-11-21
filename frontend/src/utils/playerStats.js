@@ -42,6 +42,7 @@ export const derivePlayerStats = (user) => {
     credits: coerceNumber(stats.credits) ?? coerceNumber(user.credits) ?? 0,
     reputation:
       coerceNumber(stats.reputation) ?? coerceNumber(user.reputation) ?? 0,
+    rank: stats.rank ?? user.rank ?? 'Captain',
     cargoCapacity:
       coerceNumber(stats.cargoCapacity) ??
       coerceNumber(user.ship?.cargoCapacity) ??
