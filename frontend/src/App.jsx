@@ -8,6 +8,7 @@ import {
 } from './api/auth'
 import PlayerStatsBar from './components/PlayerStatsBar'
 import HexGridMap from './components/HexGridMap'
+import Shipyard from './components/Shipyard'
 
 const initialFormState = { email: '', password: '' }
 const SESSION_TOKEN_KEY = 'space_trader_access_token'
@@ -16,6 +17,7 @@ const VIEW = {
   REGISTER: 'register',
   PLAYER: 'player',
   MAP: 'map',
+  SHIPYARD: 'shipyard',
 }
 
 const readStoredToken = () => {
@@ -228,6 +230,7 @@ function App() {
   const isRegisterView = !loginResult && activeView === VIEW.REGISTER
   const isPlayerView = !!loginResult && activeView === VIEW.PLAYER
   const isMapView = !!loginResult && activeView === VIEW.MAP
+  const isShipyardView = !!loginResult && activeView === VIEW.SHIPYARD
 
   return (
     <main className="app">
@@ -274,6 +277,41 @@ function App() {
         </div>
       )}
 
+      {isShipyardView && (
+        <div style={{ position: 'relative' }}>
+          <PlayerStatsBar
+            user={loginResult}
+            onLogout={handleLogout}
+            isLoggingOut={isLogoutSubmitting}
+          />
+          <div style={{ marginTop: '60px' }}>
+            <div style={{ position: 'absolute', top: '70px', right: '20px', zIndex: 100 }}>
+              <button
+                onClick={() => setActiveView(VIEW.PLAYER)}
+                style={{
+                  padding: '10px 20px',
+                  background: 'rgba(0, 0, 0, 0.7)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Back to Dashboard
+              </button>
+            </div>
+            <Shipyard
+              sessionToken={sessionTokenRef.current}
+              playerPosition={playerPosition}
+              onShipTransaction={(updatedUser) => {
+                // Update user state with the updated user from ship transaction
+                setLoginResult(updatedUser);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {isPlayerView && (
         <div style={{ padding: '20px' }}>
           <h1>Welcome, {loginResult?.username}!</h1>
@@ -281,21 +319,36 @@ function App() {
             {currentHexLabel ? ` ${currentHexLabel}` : ''}.
           </p>
           <p>Your space trading journey begins here.</p>
-          <button
-            onClick={() => setActiveView(VIEW.MAP)}
-            style={{
-              padding: '15px 30px',
-              background: '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              marginTop: '20px',
-            }}
-          >
-            View Universe Map
-          </button>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+            <button
+              onClick={() => setActiveView(VIEW.MAP)}
+              style={{
+                padding: '15px 30px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+              }}
+            >
+              View Universe Map
+            </button>
+            <button
+              onClick={() => setActiveView(VIEW.SHIPYARD)}
+              style={{
+                padding: '15px 30px',
+                background: '#4299e1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+              }}
+            >
+              Shipyard
+            </button>
+          </div>
         </div>
       )}
 

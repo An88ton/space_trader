@@ -9,6 +9,7 @@ import { UniverseModule } from './universe/universe.module';
 import { TravelModule } from './travel/travel.module';
 import { MarketModule } from './market/market.module';
 import { EventModule } from './events/event.module';
+import { ShipyardModule } from './shipyard/shipyard.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EventModule } from './events/event.module';
     TravelModule,
     MarketModule,
     EventModule,
+    ShipyardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

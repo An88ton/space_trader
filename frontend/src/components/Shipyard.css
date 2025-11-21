@@ -1,0 +1,249 @@
+.shipyard {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #e0e0e0;
+}
+
+.shipyard__header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #4a5568;
+  padding-bottom: 20px;
+}
+
+.shipyard__header h1 {
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+}
+
+.shipyard__header p {
+  margin: 5px 0;
+  color: #a0aec0;
+}
+
+.shipyard__location {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(74, 85, 104, 0.3);
+  border-radius: 4px;
+}
+
+.shipyard__location--warning {
+  color: #fc8181;
+  background: rgba(252, 129, 129, 0.1);
+}
+
+.shipyard__section {
+  margin-bottom: 40px;
+}
+
+.shipyard__section h2 {
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  border-bottom: 1px solid #4a5568;
+  padding-bottom: 10px;
+}
+
+.shipyard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.shipyard__ship-card {
+  background: #2d3748;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.shipyard__ship-card:hover {
+  border-color: #718096;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.shipyard__ship-card--active {
+  border-color: #48bb78;
+  background: rgba(72, 187, 120, 0.1);
+}
+
+.shipyard__ship-card--owned {
+  opacity: 0.7;
+  border-color: #718096;
+}
+
+.shipyard__ship-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #4a5568;
+}
+
+.shipyard__ship-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shipyard__active-badge {
+  background: #48bb78;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: normal;
+}
+
+.shipyard__ship-level {
+  background: #4a5568;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.shipyard__ship-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.shipyard__stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.shipyard__stat-label {
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.shipyard__stat-value {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.shipyard__btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shipyard__btn--primary {
+  background: #4299e1;
+  color: #ffffff;
+}
+
+.shipyard__btn--primary:hover:not(:disabled) {
+  background: #3182ce;
+}
+
+.shipyard__btn--danger {
+  background: #f56565;
+  color: #ffffff;
+}
+
+.shipyard__btn--danger:hover:not(:disabled) {
+  background: #e53e3e;
+}
+
+.shipyard__btn--secondary {
+  background: #718096;
+  color: #ffffff;
+}
+
+.shipyard__btn--secondary:hover:not(:disabled) {
+  background: #4a5568;
+}
+
+.shipyard__btn--disabled {
+  background: #4a5568;
+  color: #718096;
+  cursor: not-allowed;
+}
+
+.shipyard__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shipyard__confirm-dialog {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(74, 85, 104, 0.5);
+  border-radius: 4px;
+}
+
+.shipyard__confirm-dialog p {
+  margin: 0 0 10px 0;
+  color: #e0e0e0;
+}
+
+.shipyard__warning {
+  color: #fc8181;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
+
+.shipyard__confirm-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.shipyard__confirm-buttons .shipyard__btn {
+  flex: 1;
+}
+
+.shipyard__error-message {
+  background: rgba(245, 101, 101, 0.1);
+  color: #fc8181;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-size: 0.875rem;
+}
+
+.shipyard__loading,
+.shipyard__error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2rem;
+}
+
+.shipyard__loading {
+  color: #a0aec0;
+}
+
+.shipyard__error {
+  color: #fc8181;
+}
+
+.shipyard__empty {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .shipyard__grid {
+    grid-template-columns: 1fr;
+  }
+}
+

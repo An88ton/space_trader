@@ -18,6 +18,7 @@ const universe_module_1 = require("./universe/universe.module");
 const travel_module_1 = require("./travel/travel.module");
 const market_module_1 = require("./market/market.module");
 const event_module_1 = require("./events/event.module");
+const shipyard_module_1 = require("./shipyard/shipyard.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +35,7 @@ exports.AppModule = AppModule = __decorate([
             travel_module_1.TravelModule,
             market_module_1.MarketModule,
             event_module_1.EventModule,
+            shipyard_module_1.ShipyardModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
